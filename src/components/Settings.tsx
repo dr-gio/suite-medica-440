@@ -8,6 +8,7 @@ const Settings: React.FC = () => {
 
     const tabs = [
         { id: 'general', label: 'General / Logo' },
+        { id: 'contact', label: 'Datos de Contacto' },
         { id: 'medications', label: 'Medicamentos' },
         { id: 'labs', label: 'Laboratorios' },
         { id: 'imaging', label: 'Imágenes' },
@@ -19,6 +20,8 @@ const Settings: React.FC = () => {
         switch (activeTab) {
             case 'general':
                 return <GeneralConfig />;
+            case 'contact':
+                return <ContactConfig />;
             case 'medications':
                 return <MedicationConfig />;
             case 'labs':
@@ -178,6 +181,63 @@ const GeneralConfig: React.FC = () => {
 
             <div>
                 <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Logo, Firma y Sello</button>
+            </div>
+        </div>
+    );
+};
+
+const ContactConfig: React.FC = () => {
+    const { doctorName, rethus, address, contactPhone, websiteUrl, updateCatalog } = useConfig();
+    const [name, setName] = useState(doctorName || '');
+    const [ret, setRet] = useState(rethus || '');
+    const [addr, setAddr] = useState(address || '');
+    const [phone, setPhone] = useState(contactPhone || '');
+    const [web, setWeb] = useState(websiteUrl || '');
+
+    const handleSave = () => {
+        updateCatalog('doctorName', name);
+        updateCatalog('rethus', ret);
+        updateCatalog('address', addr);
+        updateCatalog('contactPhone', phone);
+        updateCatalog('websiteUrl', web);
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1.5rem' }}>
+                <h3 style={{ margin: 0 }}>Información Profesional y de Contacto</h3>
+                <p style={{ color: 'var(--text-muted)' }}>Esta información aparecerá en el encabezado y pie de página de todos los documentos impresos y compartidos.</p>
+
+                <div className="form-row" style={{ width: '100%', marginBottom: 0 }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Nombre del Profesional</label>
+                        <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Dr. Giovanni Fuentes" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Registro Médico / RETHUS</label>
+                        <input className="form-input" value={ret} onChange={e => setRet(e.target.value)} placeholder="Ej: CMC2017-222322" />
+                    </div>
+                </div>
+
+                <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">Dirección del Consultorio / Clínica</label>
+                    <input className="form-input" value={addr} onChange={e => setAddr(e.target.value)} placeholder="Ej: Cra 47 # 79-191, Barranquilla" />
+                </div>
+
+                <div className="form-row" style={{ width: '100%', marginBottom: 0 }}>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Teléfono de Contacto</label>
+                        <input className="form-input" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Ej: 318 180 0130" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Sitio Web</label>
+                        <input className="form-input" value={web} onChange={e => setWeb(e.target.value)} placeholder="Ej: www.drgiovannifuentes.com" />
+                    </div>
+                </div>
+
+                <div style={{ marginTop: '1rem' }}>
+                    <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Datos de Contacto</button>
+                </div>
             </div>
         </div>
     );

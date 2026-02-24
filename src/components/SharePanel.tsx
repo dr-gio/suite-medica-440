@@ -10,7 +10,7 @@ interface Props {
 }
 
 const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
-    const { gmailClientId } = useConfig();
+    const { gmailClientId, doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [downloaded, setDownloaded] = useState(false);
@@ -24,8 +24,8 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
         return encodeURIComponent(
             `Estimado/a ${patient.name || 'paciente'},\n\n` +
             `Le enviamos su *${documentTitle}* generado el ${date} en 440 Clinic.\n\n` +
-            `_Dr. Giovanni Fuentes_\n_Cirujano Plástico Estético y Reconstructivo_\n_RETHUS: CMC2017-222322_\n` +
-            `📞 +57 318 180 0130\n🌐 www.drgiovannifuentes.com`
+            `_${doctorName || 'Dr. Giovanni Fuentes'}_\n_Cirujano Plástico Estético y Reconstructivo_\n_RETHUS: ${rethus || 'CMC2017-222322'}_\n` +
+            `📞 +57 ${contactPhone || '318 180 0130'}\n🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}`
         );
     };
 
@@ -72,11 +72,11 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                   <p>Adjunto encontrará su <strong>${documentTitle}</strong> generado el ${date} en <strong>440 Clinic</strong>.</p>
                   <p>Si tiene alguna pregunta, no dude en contactarnos.</p>
                   <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
-                  <p style="margin:0;font-weight:600">Dr. Giovanni Fuentes</p>
+                  <p style="margin:0;font-weight:600">${doctorName || 'Dr. Giovanni Fuentes'}</p>
                   <p style="margin:4px 0;color:#555">Cirujano Plástico Estético y Reconstructivo</p>
-                  <p style="margin:4px 0;color:#555">RETHUS: CMC2017-222322</p>
-                  <p style="margin:4px 0;color:#555">440 Clinic &mdash; Cra 47 # 79-191, Barranquilla</p>
-                  <p style="margin:4px 0;color:#555">📞 +57 318 180 0130 &nbsp;|&nbsp; 🌐 www.drgiovannifuentes.com</p>
+                  <p style="margin:4px 0;color:#555">RETHUS: ${rethus || 'CMC2017-222322'}</p>
+                  <p style="margin:4px 0;color:#555">440 Clinic &mdash; ${address || 'Cra 47 # 79-191, Barranquilla'}</p>
+                  <p style="margin:4px 0;color:#555">📞 +57 ${contactPhone || '318 180 0130'} &nbsp;|&nbsp; 🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}</p>
                 </div>
             `;
 

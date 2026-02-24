@@ -8,7 +8,7 @@ interface PrintLayoutProps {
 }
 
 const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) => {
-    const { logoUrl, signatureUrl, sealUrl } = useConfig();
+    const { logoUrl, signatureUrl, sealUrl, doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
 
     return (
         <div className="printable-document print-only">
@@ -19,12 +19,12 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
                     ) : (
                         <h2>440 CLINIC</h2>
                     )}
-                    <p style={{ fontWeight: 600, color: '#1f2937' }}>Dr. Giovanni Fuentes</p>
+                    <p style={{ fontWeight: 600, color: '#1f2937' }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
                     <p>Cirujano Plástico Estético y Reconstructivo</p>
-                    <p>RETHUS: CMC2017-222322</p>
-                    <p>Cra 47 # 79-191, Barranquilla</p>
-                    <p>Tel: +57 318 180 0130</p>
-                    <p>www.drgiovannifuentes.com</p>
+                    <p>RETHUS: {rethus || 'CMC2017-222322'}</p>
+                    <p>{address || 'Cra 47 # 79-191, Barranquilla'}</p>
+                    <p>Tel: +57 {contactPhone || '318 180 0130'}</p>
+                    <p>{websiteUrl || 'www.drgiovannifuentes.com'}</p>
                 </div>
                 <div className="doc-info">
                     <div className="doc-type">{title}</div>
@@ -63,9 +63,9 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
                         {sealUrl && (
                             <img src={sealUrl} alt="Sello" style={{ position: 'absolute', right: '-80px', bottom: '0px', width: '120px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
                         )}
-                        <p style={{ fontWeight: 600, color: '#1f2937', position: 'relative', zIndex: 3 }}>Dr. Giovanni Fuentes</p>
+                        <p style={{ fontWeight: 600, color: '#1f2937', position: 'relative', zIndex: 3 }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
                         <p style={{ fontSize: '10pt', color: '#666', position: 'relative', zIndex: 3 }}>Cirujano Plástico Estético y Reconstructivo</p>
-                        <p style={{ fontSize: '10pt', color: '#666', position: 'relative', zIndex: 3 }}>RETHUS: CMC2017-222322</p>
+                        <p style={{ fontSize: '10pt', color: '#666', position: 'relative', zIndex: 3 }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
                     </div>
                 </div>
                 <div className="qr-placeholder">

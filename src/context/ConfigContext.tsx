@@ -13,12 +13,17 @@ interface ConfigContextData {
     signatureUrl?: string;
     sealUrl?: string;
     gmailClientId?: string;
+    doctorName?: string;
+    rethus?: string;
+    address?: string;
+    contactPhone?: string;
+    websiteUrl?: string;
     medications: Medication[];
     labs: Lab[];
     imaging: ImagingStudy[];
     surgeries: SurgeryTemplate[];
     nutrition: NutritionPhase[];
-    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId'>(catalog: T, items: any) => void;
+    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl'>(catalog: T, items: any) => void;
 }
 
 const defaultMedications: Medication[] = [
@@ -64,6 +69,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [signatureUrl, setSignatureUrl] = useState<string | undefined>(undefined);
     const [sealUrl, setSealUrl] = useState<string | undefined>(undefined);
     const [gmailClientId, setGmailClientId] = useState<string | undefined>(undefined);
+    const [doctorName, setDoctorName] = useState<string | undefined>('Dr. Giovanni Fuentes');
+    const [rethus, setRethus] = useState<string | undefined>('CMC2017-222322');
+    const [address, setAddress] = useState<string | undefined>('Cra 47 # 79-191, Barranquilla');
+    const [contactPhone, setContactPhone] = useState<string | undefined>('318 180 0130');
+    const [websiteUrl, setWebsiteUrl] = useState<string | undefined>('www.drgiovannifuentes.com');
     const [medications, setMedications] = useState<Medication[]>(defaultMedications);
     const [labs, setLabs] = useState<Lab[]>(defaultLabs);
     const [imaging, setImaging] = useState<ImagingStudy[]>(defaultImaging);
@@ -88,6 +98,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (data.signature_url) setSignatureUrl(data.signature_url);
                 if (data.seal_url) setSealUrl(data.seal_url);
                 if (data.gmail_client_id) setGmailClientId(data.gmail_client_id);
+                if (data.doctor_name) setDoctorName(data.doctor_name);
+                if (data.rethus) setRethus(data.rethus);
+                if (data.address) setAddress(data.address);
+                if (data.contact_phone) setContactPhone(data.contact_phone);
+                if (data.website_url) setWebsiteUrl(data.website_url);
                 if (data.medications?.length) setMedications(data.medications);
                 if (data.labs?.length) setLabs(data.labs);
                 if (data.imaging?.length) setImaging(data.imaging);
@@ -107,6 +122,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (parsed.signatureUrl) setSignatureUrl(parsed.signatureUrl);
                 if (parsed.sealUrl) setSealUrl(parsed.sealUrl);
                 if (parsed.gmailClientId) setGmailClientId(parsed.gmailClientId);
+                if (parsed.doctorName) setDoctorName(parsed.doctorName);
+                if (parsed.rethus) setRethus(parsed.rethus);
+                if (parsed.address) setAddress(parsed.address);
+                if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
+                if (parsed.websiteUrl) setWebsiteUrl(parsed.websiteUrl);
                 if (parsed.medications) setMedications(parsed.medications);
                 if (parsed.labs) setLabs(parsed.labs);
                 if (parsed.imaging) setImaging(parsed.imaging);
@@ -120,6 +140,9 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const saveToSupabase = async (updates: Partial<{
         logo_url: string | undefined; signature_url: string | undefined;
         seal_url: string | undefined; gmail_client_id: string | undefined;
+        doctor_name: string | undefined; rethus: string | undefined;
+        address: string | undefined; contact_phone: string | undefined;
+        website_url: string | undefined;
         medications: Medication[]; labs: Lab[]; imaging: ImagingStudy[];
         surgeries: SurgeryTemplate[]; nutrition: NutritionPhase[];
     }>) => {
@@ -127,6 +150,8 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             id: 'main',
             logo_url: logoUrl, signature_url: signatureUrl, seal_url: sealUrl,
             gmail_client_id: gmailClientId,
+            doctor_name: doctorName, rethus, address, contact_phone: contactPhone,
+            website_url: websiteUrl,
             medications, labs, imaging, surgeries, nutrition,
             ...updates,
             updated_at: new Date().toISOString(),
@@ -138,6 +163,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (catalog === 'signatureUrl') { setSignatureUrl(items); saveToSupabase({ signature_url: items }); }
         if (catalog === 'sealUrl') { setSealUrl(items); saveToSupabase({ seal_url: items }); }
         if (catalog === 'gmailClientId') { setGmailClientId(items); saveToSupabase({ gmail_client_id: items }); }
+        if (catalog === 'doctorName') { setDoctorName(items); saveToSupabase({ doctor_name: items }); }
+        if (catalog === 'rethus') { setRethus(items); saveToSupabase({ rethus: items }); }
+        if (catalog === 'address') { setAddress(items); saveToSupabase({ address: items }); }
+        if (catalog === 'contactPhone') { setContactPhone(items); saveToSupabase({ contact_phone: items }); }
+        if (catalog === 'websiteUrl') { setWebsiteUrl(items); saveToSupabase({ website_url: items }); }
         if (catalog === 'medications') { setMedications(items); saveToSupabase({ medications: items }); }
         if (catalog === 'labs') { setLabs(items); saveToSupabase({ labs: items }); }
         if (catalog === 'imaging') { setImaging(items); saveToSupabase({ imaging: items }); }
@@ -148,7 +178,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!loaded) return null;
 
     return (
-        <ConfigContext.Provider value={{ logoUrl, signatureUrl, sealUrl, gmailClientId, medications, labs, imaging, surgeries, nutrition, updateCatalog }}>
+        <ConfigContext.Provider value={{
+            logoUrl, signatureUrl, sealUrl, gmailClientId,
+            doctorName, rethus, address, contactPhone, websiteUrl,
+            medications, labs, imaging, surgeries, nutrition, updateCatalog
+        }}>
             {children}
         </ConfigContext.Provider>
     );
