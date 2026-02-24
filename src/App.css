@@ -531,3 +531,9 @@ textarea.form-input {
 .sidebar-overlay.open {
   display: block;
 }
+@media (max-width: 400px) {
+  .header h1 {
+    font-size: 0.9rem;
+    max-width: 120px;
+  }
+}
