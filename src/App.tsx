@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './App.css';
-import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2 } from 'lucide-react';
+import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X } from 'lucide-react';
 import PinLock, { useAutoLock } from './components/PinLock';
 import SharePanel from './components/SharePanel';
 import Prescriptions from './components/Prescriptions';
@@ -20,6 +20,7 @@ function App() {
   const { locked, lock } = useAutoLock();
   const [activeTab, setActiveTab] = useState('prescriptions');
   const [showShare, setShowShare] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Shared Patient Context
   const [patient, setPatient] = useState({
@@ -77,8 +78,14 @@ function App() {
       {/* PIN Lock Screen */}
       {locked && <PinLock onUnlock={() => { localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString()); window.location.reload(); }} />}
 
+      {/* Mobile Sidebar Overlay */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      ></div>
+
       {/* Sidebar - hidden when printing */}
-      <aside className="sidebar no-print">
+      <aside className={`sidebar no-print ${sidebarOpen ? 'open' : ''}`}>
         <div className="brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '1.5rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1.5rem', gap: '1rem' }}>
           {logoUrl ? (
             <img src={logoUrl} alt="Suite Médica Logo" style={{ maxWidth: '200px', maxHeight: '60px', objectFit: 'contain' }} />
@@ -97,7 +104,10 @@ function App() {
             <button
               key={item.id}
               className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setSidebarOpen(false);
+              }}
             >
               {item.icon}
               {item.label}
@@ -128,15 +138,20 @@ function App() {
       {/* Main Content */}
       <main className="main-content">
         <header className="header no-print">
-          <h1>{activeNavLabel}</h1>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <h1>{activeNavLabel}</h1>
+          </div>
           <div className="header-actions">
             <button className="action-btn" onClick={() => setShowShare(true)} style={{ background: 'linear-gradient(135deg,#25d366,#1da851)', color: 'white', border: 'none' }}>
               <Share2 size={18} />
-              Compartir
+              <span>Compartir</span>
             </button>
             <button className="action-btn" onClick={handlePrint}>
               <Printer size={18} />
-              Imprimir / PDF
+              <span>Imprimir / PDF</span>
             </button>
           </div>
         </header>

@@ -147,8 +147,10 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                     backdropFilter: 'blur(20px)',
                     borderRadius: '20px',
                     border: '1px solid var(--border-color, #e5e7eb)',
-                    padding: '2rem',
-                    width: '100%', maxWidth: '480px',
+                    padding: '1.5rem',
+                    width: '95%', maxWidth: '480px',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
                 }}
                 onClick={e => e.stopPropagation()}

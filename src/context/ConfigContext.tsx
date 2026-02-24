@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 // Interfaces for our catalogs
 export interface Medication { id: string; name: string; dosage: string; frequency: string; duration: string; indications: string; }
@@ -39,35 +40,21 @@ const defaultImaging: ImagingStudy[] = [
 
 const defaultSurgeries: SurgeryTemplate[] = [
     {
-        id: '1',
-        name: 'Lipoescultura',
+        id: '1', name: 'Lipoescultura',
         preText: '1. Ayuno estricto de 8 horas (incluyendo agua).\n2. Suspender aspirina u omega 3 quince días antes.\n3. Venir acompañado por un adulto responsable.\n4. Traer exámenes y faja el día del procedimiento.',
         postText: '1. Reposo relativo por 48 horas.\n2. Usar la faja de compresión día y noche.\n3. Asistir a masajes postoperatorios al segundo día.\n4. Dieta blanda los primeros dos días.\n5. Evitar exposición solar.',
     },
     {
-        id: '2',
-        name: 'Rinoplastia',
+        id: '2', name: 'Rinoplastia',
         preText: '1. Ayuno de 8 horas.\n2. No usar maquillaje el día de la cirugía.\n3. Lavado del rostro la noche anterior con jabón antibacterial.\n4. Ropa cómoda abotonada al frente.',
         postText: '1. Dormir semi-sentado (cabeza elevada) con dos almohadas.\n2. No sonarse la nariz, limpiar suavemente si es necesario.\n3. Aplicar hielo local envuelto en tela las primeras 48h.\n4. Dieta líquida a blanda.',
     }
 ];
 
 const defaultNutrition: NutritionPhase[] = [
-    {
-        id: '1',
-        name: 'Fase 1: Dieta Líquida Clara (Días 1 a 3)',
-        desc: 'Bebidas no carbonatadas, caldos claros, té sin cafeína, gelatina sin azúcar, agua. Tomar en sorbos pequeños y constantes para mantener la hidratación.',
-    },
-    {
-        id: '2',
-        name: 'Fase 2: Dieta Líquida Completa y Suplementos (Días 4 a 14)',
-        desc: 'Lácteos descremados sin lactosa, sopas cremosas coladas (sin grumos), batidos o suplementos proteicos. Mantener la comida líquida para evitar esfuerzo gástrico.',
-    },
-    {
-        id: '3',
-        name: 'Fase 3: Dieta en Puré / Pastosa (Semanas 3 y 4)',
-        desc: 'Alimentos licuados o aplastados. Puré de papas, zanahorias, pollo muy cocido y desmenuzado, pescados blancos, huevos revueltos suaves. Textura sin necesidad de masticación fuerte.',
-    }
+    { id: '1', name: 'Fase 1: Dieta Líquida Clara (Días 1 a 3)', desc: 'Bebidas no carbonatadas, caldos claros, té sin cafeína, gelatina sin azúcar, agua. Tomar en sorbos pequeños y constantes para mantener la hidratación.' },
+    { id: '2', name: 'Fase 2: Dieta Líquida Completa y Suplementos (Días 4 a 14)', desc: 'Lácteos descremados sin lactosa, sopas cremosas coladas (sin grumos), batidos o suplementos proteicos. Mantener la comida líquida para evitar esfuerzo gástrico.' },
+    { id: '3', name: 'Fase 3: Dieta en Puré / Pastosa (Semanas 3 y 4)', desc: 'Alimentos licuados o aplastados. Puré de papas, zanahorias, pollo muy cocido y desmenuzado, pescados blancos, huevos revueltos suaves.' }
 ];
 
 const ConfigContext = createContext<ConfigContextData | undefined>(undefined);
@@ -85,7 +72,33 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
-        // Load from local storage
+        loadConfig();
+    }, []);
+
+    const loadConfig = async () => {
+        // Try Supabase first
+        try {
+            const { data, error } = await supabase
+                .from('suite_config')
+                .select('*')
+                .eq('id', 'main')
+                .single();
+            if (!error && data) {
+                if (data.logo_url) setLogoUrl(data.logo_url);
+                if (data.signature_url) setSignatureUrl(data.signature_url);
+                if (data.seal_url) setSealUrl(data.seal_url);
+                if (data.gmail_client_id) setGmailClientId(data.gmail_client_id);
+                if (data.medications?.length) setMedications(data.medications);
+                if (data.labs?.length) setLabs(data.labs);
+                if (data.imaging?.length) setImaging(data.imaging);
+                if (data.surgeries?.length) setSurgeries(data.surgeries);
+                if (data.nutrition?.length) setNutrition(data.nutrition);
+                setLoaded(true);
+                return;
+            }
+        } catch (_) { /* fall through to localStorage */ }
+
+        // Fallback: localStorage
         const stored = localStorage.getItem('suiteMedicaConfig');
         if (stored) {
             try {
@@ -99,31 +112,40 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (parsed.imaging) setImaging(parsed.imaging);
                 if (parsed.surgeries) setSurgeries(parsed.surgeries);
                 if (parsed.nutrition) setNutrition(parsed.nutrition);
-            } catch (e) {
-                console.error("Failed to load configs", e);
-            }
+            } catch (e) { console.error('Failed to load configs', e); }
         }
         setLoaded(true);
-    }, []);
+    };
 
-    const saveToStorage = (updates: Partial<ConfigContextData>) => {
-        const current = { logoUrl, signatureUrl, sealUrl, gmailClientId, medications, labs, imaging, surgeries, nutrition, ...updates };
-        localStorage.setItem('suiteMedicaConfig', JSON.stringify(current));
+    const saveToSupabase = async (updates: Partial<{
+        logo_url: string | undefined; signature_url: string | undefined;
+        seal_url: string | undefined; gmail_client_id: string | undefined;
+        medications: Medication[]; labs: Lab[]; imaging: ImagingStudy[];
+        surgeries: SurgeryTemplate[]; nutrition: NutritionPhase[];
+    }>) => {
+        await supabase.from('suite_config').upsert({
+            id: 'main',
+            logo_url: logoUrl, signature_url: signatureUrl, seal_url: sealUrl,
+            gmail_client_id: gmailClientId,
+            medications, labs, imaging, surgeries, nutrition,
+            ...updates,
+            updated_at: new Date().toISOString(),
+        });
     };
 
     const updateCatalog = (catalog: string, items: any) => {
-        if (catalog === 'logoUrl') { setLogoUrl(items); saveToStorage({ logoUrl: items }); }
-        if (catalog === 'signatureUrl') { setSignatureUrl(items); saveToStorage({ signatureUrl: items }); }
-        if (catalog === 'sealUrl') { setSealUrl(items); saveToStorage({ sealUrl: items }); }
-        if (catalog === 'gmailClientId') { setGmailClientId(items); saveToStorage({ gmailClientId: items }); }
-        if (catalog === 'medications') { setMedications(items); saveToStorage({ medications: items }); }
-        if (catalog === 'labs') { setLabs(items); saveToStorage({ labs: items }); }
-        if (catalog === 'imaging') { setImaging(items); saveToStorage({ imaging: items }); }
-        if (catalog === 'surgeries') { setSurgeries(items); saveToStorage({ surgeries: items }); }
-        if (catalog === 'nutrition') { setNutrition(items); saveToStorage({ nutrition: items }); }
+        if (catalog === 'logoUrl') { setLogoUrl(items); saveToSupabase({ logo_url: items }); }
+        if (catalog === 'signatureUrl') { setSignatureUrl(items); saveToSupabase({ signature_url: items }); }
+        if (catalog === 'sealUrl') { setSealUrl(items); saveToSupabase({ seal_url: items }); }
+        if (catalog === 'gmailClientId') { setGmailClientId(items); saveToSupabase({ gmail_client_id: items }); }
+        if (catalog === 'medications') { setMedications(items); saveToSupabase({ medications: items }); }
+        if (catalog === 'labs') { setLabs(items); saveToSupabase({ labs: items }); }
+        if (catalog === 'imaging') { setImaging(items); saveToSupabase({ imaging: items }); }
+        if (catalog === 'surgeries') { setSurgeries(items); saveToSupabase({ surgeries: items }); }
+        if (catalog === 'nutrition') { setNutrition(items); saveToSupabase({ nutrition: items }); }
     };
 
-    if (!loaded) return null; // basic un-flicker
+    if (!loaded) return null;
 
     return (
         <ConfigContext.Provider value={{ logoUrl, signatureUrl, sealUrl, gmailClientId, medications, labs, imaging, surgeries, nutrition, updateCatalog }}>
@@ -134,6 +156,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
 export const useConfig = () => {
     const context = useContext(ConfigContext);
-    if (!context) throw new Error("useConfig must be used within ConfigProvider");
+    if (!context) throw new Error('useConfig must be used within ConfigProvider');
     return context;
 };

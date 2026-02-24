@@ -85,7 +85,7 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
                 borderRadius: '20px',
                 border: '1px solid rgba(255,255,255,0.12)',
                 padding: '2.5rem 2rem',
-                width: '100%', maxWidth: '360px',
+                width: '90%', maxWidth: '360px',
                 boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
                 animation: shake ? 'shake 0.5s ease' : 'none',
             }}>
