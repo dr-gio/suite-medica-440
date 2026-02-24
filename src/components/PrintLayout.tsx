@@ -23,7 +23,7 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
                     <p>Cirujano Plástico Estético y Reconstructivo</p>
                     <p>RETHUS: {rethus || 'CMC2017-222322'}</p>
                     <p>{address || 'Cra 47 # 79-191, Barranquilla'}</p>
-                    <p>Tel: +57 {contactPhone || '318 180 0130'}</p>
+                    <p>Tel: +57 {contactPhone || '3181800130'}</p>
                     <p>{websiteUrl || 'www.drgiovannifuentes.com'}</p>
                 </div>
                 <div className="doc-info">

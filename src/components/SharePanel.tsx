@@ -25,7 +25,7 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
             `Estimado/a ${patient.name || 'paciente'},\n\n` +
             `Le enviamos su *${documentTitle}* generado el ${date} en 440 Clinic.\n\n` +
             `_${doctorName || 'Dr. Giovanni Fuentes'}_\n_Cirujano Plástico Estético y Reconstructivo_\n_RETHUS: ${rethus || 'CMC2017-222322'}_\n` +
-            `📞 +57 ${contactPhone || '318 180 0130'}\n🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}`
+            `📞 +57 ${contactPhone || '3181800130'}\n🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}`
         );
     };
 
@@ -76,7 +76,7 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                   <p style="margin:4px 0;color:#555">Cirujano Plástico Estético y Reconstructivo</p>
                   <p style="margin:4px 0;color:#555">RETHUS: ${rethus || 'CMC2017-222322'}</p>
                   <p style="margin:4px 0;color:#555">440 Clinic &mdash; ${address || 'Cra 47 # 79-191, Barranquilla'}</p>
-                  <p style="margin:4px 0;color:#555">📞 +57 ${contactPhone || '318 180 0130'} &nbsp;|&nbsp; 🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}</p>
+                  <p style="margin:4px 0;color:#555">📞 +57 ${contactPhone || '3181800130'} &nbsp;|&nbsp; 🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}</p>
                 </div>
             `;
 
