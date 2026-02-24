@@ -23,7 +23,7 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
                     <p>Cirujano Plástico Estético y Reconstructivo</p>
                     <p>RETHUS: CMC2017-222322</p>
                     <p>Cra 47 # 79-191, Barranquilla</p>
-                    <p>Tel: +57 318 180 130</p>
+                    <p>Tel: +57 318 180 0130</p>
                     <p>www.drgiovannifuentes.com</p>
                 </div>
                 <div className="doc-info">
