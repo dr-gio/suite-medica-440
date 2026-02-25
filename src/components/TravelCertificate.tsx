@@ -41,15 +41,15 @@ const TravelCertificate: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title="Certificado Médico de Viaje">
-                <div style={{ fontSize: '1.15rem', lineHeight: '1.8', marginTop: '2rem', textAlign: 'justify', color: '#111827' }}>
-                    <p style={{ fontWeight: 600, textAlign: 'center', marginBottom: '3rem', fontSize: '1.4rem' }}>A QUIEN INTERESE:</p>
+                <div style={{ fontSize: '1rem', lineHeight: '1.5', marginTop: '1rem', textAlign: 'justify', color: '#111827' }}>
+                    <p style={{ fontWeight: 600, textAlign: 'center', marginBottom: '1.5rem', fontSize: '1.2rem' }}>A QUIEN INTERESE:</p>
 
                     {templateText.split('\n').map((paragraph, idx) => (
-                        <p key={idx} style={{ marginBottom: '1rem', textIndent: '2rem' }}>{paragraph}</p>
+                        <p key={idx} style={{ marginBottom: '0.5rem', textIndent: '2rem' }}>{paragraph}</p>
                     ))}
 
-                    <div style={{ backgroundColor: '#f9fafb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '3rem 0' }}>
-                        <h4 style={{ color: '#2563eb', marginBottom: '1rem', borderBottom: '1px solid #bfdbfe', paddingBottom: '0.5rem', fontFamily: 'Outfit, sans-serif' }}>Detalles del Viaje y Permisos</h4>
+                    <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '1.5rem 0' }}>
+                        <h4 style={{ color: '#2563eb', marginBottom: '0.8rem', borderBottom: '1px solid #bfdbfe', paddingBottom: '0.3rem', fontFamily: 'Outfit, sans-serif' }}>Detalles del Viaje y Permisos</h4>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
                             {destination && (
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -67,7 +67,7 @@ const TravelCertificate: React.FC<Props> = ({ patient }) => {
                         </div>
                     </div>
 
-                    <p style={{ marginTop: '2rem', textAlign: 'center', color: '#4b5563', fontStyle: 'italic', fontSize: '1rem' }}>
+                    <p style={{ marginTop: '1rem', textAlign: 'center', color: '#4b5563', fontStyle: 'italic', fontSize: '0.9rem' }}>
                         Este certificado se expide a solicitud del paciente para los fines pertinentes.
                     </p>
                 </div>
