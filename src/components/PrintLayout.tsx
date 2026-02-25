@@ -15,7 +15,7 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
             <div className="print-header">
                 <div className="clinic-info">
                     {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" style={{ maxWidth: '250px', maxHeight: '100px', objectFit: 'contain', marginBottom: '0.5rem' }} />
+                        <img src={logoUrl} alt="Logo" style={{ maxWidth: '200px', maxHeight: '70px', objectFit: 'contain', marginBottom: '0.25rem' }} />
                     ) : (
                         <h2>440 CLINIC</h2>
                     )}
@@ -54,9 +54,9 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
             <div className="print-footer">
                 <div className="signature" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {signatureUrl ? (
-                        <img src={signatureUrl} alt="Firma" style={{ maxWidth: '200px', maxHeight: '100px', objectFit: 'contain', zIndex: 1, position: 'relative' }} />
+                        <img src={signatureUrl} alt="Firma" style={{ maxWidth: '200px', maxHeight: '70px', objectFit: 'contain', zIndex: 1, position: 'relative', marginBottom: '-10px' }} />
                     ) : (
-                        <div style={{ height: '80px' }} />
+                        <div style={{ height: '60px' }} />
                     )}
 
                     <div className="signature-line" style={{ borderTop: '1px solid #1f2937', width: '250px', paddingTop: '0.5rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>

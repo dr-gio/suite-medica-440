@@ -251,32 +251,32 @@ textarea.form-input {
 
 /* Printable Document View */
 .printable-document {
-  padding: 2rem;
+  padding: 1rem 1.5rem;
   background-color: white;
   color: black;
   font-family: 'Times New Roman', Times, serif;
   /* Professional medical look for print */
   font-size: 11pt;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .print-header {
   display: flex;
   justify-content: space-between;
   border-bottom: 2px solid #2563eb;
-  padding-bottom: 1rem;
-  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .clinic-info h2 {
   color: #2563eb;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
   font-family: 'Outfit', sans-serif;
-  font-size: 1.25rem;
+  font-size: 1.1rem;
 }
 
 .clinic-info p {
-  margin: 0.25rem 0;
+  margin: 0.15rem 0;
   font-size: 9pt;
   color: #4b5563;
   font-family: 'Outfit', sans-serif;
@@ -288,22 +288,22 @@ textarea.form-input {
 }
 
 .doc-type {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: #1f2937;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 .print-patient-info {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.5rem;
   background-color: #f9fafb;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   border: 1px solid #e5e7eb;
 }
 
@@ -317,20 +317,20 @@ textarea.form-input {
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
   font-family: 'Outfit', sans-serif;
 }
 
 .info-value {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #111827;
   font-family: 'Outfit', sans-serif;
 }
 
 .print-body {
-  margin-bottom: 2rem;
-  min-height: 200px;
+  margin-bottom: 1rem;
+  min-height: 50px;
 }
 
 .print-list {
@@ -339,8 +339,8 @@ textarea.form-input {
 }
 
 .print-list-item {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px dashed #e5e7eb;
 }
 
@@ -350,32 +350,32 @@ textarea.form-input {
 
 .print-item-title {
   font-weight: bold;
-  font-size: 1.05rem;
-  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
 }
 
 .print-item-desc {
   margin: 0;
   color: #374151;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .recommendations-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .recommendations-section h3 {
   color: #2563eb;
   border-bottom: 1px solid #bfdbfe;
-  padding-bottom: 0.4rem;
-  margin-bottom: 0.75rem;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.5rem;
   font-family: 'Outfit', sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 
 .print-footer {
-  margin-top: 2rem;
-  padding-top: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -534,6 +534,7 @@ textarea.form-input {
 .sidebar-overlay.open {
   display: block;
 }
+
 @media (max-width: 400px) {
   .header h1 {
     font-size: 0.9rem;
