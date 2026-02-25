@@ -88,18 +88,20 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
 
             {/* Print View */}
             <PrintLayout patient={patient} title="Fórmula Médica">
-                <ul className="print-list">
-                    {meds.filter(m => m.name).map((med, idx) => (
-                        <li key={idx} className="print-list-item">
-                            <div className="print-item-title">{idx + 1}. {med.name} {med.dosage && `- ${med.dosage}`}</div>
-                            {med.frequency && <p className="print-item-desc"><strong>Tomar:</strong> {med.frequency} {med.duration && `por ${med.duration}`}</p>}
-                            {med.indications && <p className="print-item-desc" style={{ marginTop: '0.25rem' }}><em>Indicaciones: {med.indications}</em></p>}
-                        </li>
-                    ))}
-                    {meds.filter(m => m.name).length === 0 && (
-                        <p>No hay medicamentos recetados todavía.</p>
-                    )}
-                </ul>
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.4', marginTop: '0.5rem', color: '#1f2937' }}>
+                    <ul className="print-list" style={{ marginTop: '0.5rem' }}>
+                        {meds.filter(m => m.name).map((med, idx) => (
+                            <li key={idx} className="print-list-item" style={{ marginBottom: '0.5rem', paddingBottom: '0.5rem' }}>
+                                <div className="print-item-title" style={{ fontSize: '0.85rem' }}>{idx + 1}. {med.name} {med.dosage && `- ${med.dosage}`}</div>
+                                {med.frequency && <p className="print-item-desc" style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}><strong>Tomar:</strong> {med.frequency} {med.duration && `por ${med.duration}`}</p>}
+                                {med.indications && <p className="print-item-desc" style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}><em>Indicaciones: {med.indications}</em></p>}
+                            </li>
+                        ))}
+                        {meds.filter(m => m.name).length === 0 && (
+                            <p>No hay medicamentos recetados todavía.</p>
+                        )}
+                    </ul>
+                </div>
             </PrintLayout>
         </div>
     );

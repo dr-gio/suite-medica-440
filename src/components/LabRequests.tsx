@@ -74,20 +74,22 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title="Solicitud de Laboratorios">
-                {dx && <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}><strong>Diagnóstico Clínico:</strong> {dx}</p>}
-                <p style={{ marginBottom: '1rem', fontWeight: 600 }}>Se solicita amablemente realizar los siguientes exámenes:</p>
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.4', marginTop: '0.5rem', color: '#1f2937' }}>
+                    {dx && <p style={{ marginBottom: '1rem', fontSize: '0.9rem' }}><strong>Diagnóstico Clínico:</strong> {dx}</p>}
+                    <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Se solicita amablemente realizar los siguientes exámenes:</p>
 
-                <ul className="print-list">
-                    {labs.filter(l => l.name).map((lab, idx) => (
-                        <li key={idx} className="print-list-item">
-                            <div className="print-item-title">{idx + 1}. {lab.name}</div>
-                            {lab.indications && <p className="print-item-desc"><em>Indicaciones: {lab.indications}</em></p>}
-                        </li>
-                    ))}
-                    {labs.filter(l => l.name).length === 0 && (
-                        <p>No hay exámenes solicitados todavía.</p>
-                    )}
-                </ul>
+                    <ul className="print-list" style={{ marginTop: '0.5rem' }}>
+                        {labs.filter(l => l.name).map((lab, idx) => (
+                            <li key={idx} className="print-list-item" style={{ marginBottom: '0.5rem', paddingBottom: '0.5rem' }}>
+                                <div className="print-item-title" style={{ fontSize: '0.85rem' }}>{idx + 1}. {lab.name}</div>
+                                {lab.indications && <p className="print-item-desc" style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}><em>Indicaciones: {lab.indications}</em></p>}
+                            </li>
+                        ))}
+                        {labs.filter(l => l.name).length === 0 && (
+                            <p>No hay exámenes solicitados todavía.</p>
+                        )}
+                    </ul>
+                </div>
             </PrintLayout>
         </div>
     );

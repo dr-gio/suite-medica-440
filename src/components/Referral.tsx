@@ -45,27 +45,27 @@ const Referral: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title="Interconsulta / Remisión Médica">
-                <div style={{ fontSize: '1.1rem', lineHeight: '1.8', marginTop: '1rem', color: '#1f2937' }}>
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.4', marginTop: '0.5rem', color: '#1f2937' }}>
 
-                    <div style={{ padding: '1rem', borderLeft: '4px solid #2563eb', backgroundColor: '#eff6ff', marginBottom: '2rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1d4ed8' }}>Derivación para Especialidad:</h3>
-                        <p style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0.25rem 0', color: '#1e3a8a' }}>{specialty || '_________________________'}</p>
+                    <div style={{ padding: '0.6rem', borderLeft: '3px solid #2563eb', backgroundColor: '#eff6ff', marginBottom: '1rem' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#1d4ed8' }}>Derivación para Especialidad:</h3>
+                        <p style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0.2rem 0', color: '#1e3a8a' }}>{specialty || '_________________________'}</p>
                         {doctor && <p style={{ margin: 0, color: '#4b5563' }}>A la atención del <strong>{doctor}</strong></p>}
                     </div>
 
-                    <div style={{ marginBottom: '2rem' }}>
-                        <h4 style={{ color: '#111827', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Impresión Diagnóstica</h4>
-                        <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '6px', border: '1px solid #f3f4f6', fontWeight: 600 }}>
+                    <div style={{ marginBottom: '1rem' }}>
+                        <h4 style={{ color: '#111827', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.3rem', marginBottom: '0.5rem' }}>Impresión Diagnóstica</h4>
+                        <div style={{ backgroundColor: '#f9fafb', padding: '0.6rem', borderRadius: '6px', border: '1px solid #f3f4f6', fontWeight: 600 }}>
                             {dx || '___________________________________________________________________'}
                         </div>
                     </div>
 
                     <div>
-                        <h4 style={{ color: '#111827', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Resumen Clínico y Motivo de Derivación</h4>
-                        <div style={{ whiteSpace: 'pre-wrap', textAlign: 'justify', lineHeight: '1.8' }}>
+                        <h4 style={{ color: '#111827', borderBottom: '1px solid #e5e7eb', paddingBottom: '0.3rem', marginBottom: '0.5rem' }}>Resumen Clínico y Motivo de Derivación</h4>
+                        <div style={{ whiteSpace: 'pre-wrap', textAlign: 'justify', lineHeight: '1.4' }}>
                             {summary ? (
                                 summary.split('\n').map((paragraph, idx) => (
-                                    <p key={idx} style={{ marginBottom: '1rem' }}>{paragraph}</p>
+                                    <p key={idx} style={{ marginBottom: '0.5rem' }}>{paragraph}</p>
                                 ))
                             ) : (
                                 <p>No se adjuntó redacción clínica.</p>
@@ -73,7 +73,7 @@ const Referral: React.FC<Props> = ({ patient }) => {
                         </div>
                     </div>
 
-                    <p style={{ marginTop: '2rem', fontStyle: 'italic', color: '#6b7280', textAlign: 'center' }}>
+                    <p style={{ marginTop: '1rem', fontStyle: 'italic', color: '#6b7280', textAlign: 'center', fontSize: '0.75rem' }}>
                         Agradezco de antemano la valoración, sugerencias y manejo conjuto de mi paciente.
                     </p>
                 </div>

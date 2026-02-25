@@ -57,32 +57,32 @@ const SickLeave: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title="Certificado de Incapacidad Médica">
-                <div style={{ fontSize: '1.1rem', lineHeight: '2', marginTop: '1rem', textAlign: 'justify' }}>
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.25', marginTop: '0.3rem', textAlign: 'justify' }}>
                     <p>
                         Certifico que el/la paciente <strong>{patient.name || '_______________________'}</strong>,
                         identificado/a con documento número <strong>{patient.id || '_________________'}</strong>,
                         requiere incapacidad médica de tipo <strong>{type.toLowerCase()}</strong> por un período de <strong>{days || '___'}</strong> días calendario.
                     </p>
 
-                    <div style={{ backgroundColor: '#f9fafb', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '2rem 0' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div style={{ backgroundColor: '#f9fafb', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '0.8rem 0' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                             <div>
-                                <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Inicio</span>
-                                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{startDate ? new Date(startDate).toLocaleDateString() : '___/___/___'}</div>
+                                <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Inicio</span>
+                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{startDate ? new Date(startDate).toLocaleDateString() : '___/___/___'}</div>
                             </div>
                             <div>
-                                <span style={{ fontSize: '0.8rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Finalización</span>
-                                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{getEndDate() ? new Date(getEndDate()).toLocaleDateString() : '___/___/___'}</div>
+                                <span style={{ fontSize: '0.7rem', color: '#6b7280', textTransform: 'uppercase', fontWeight: 600 }}>Fecha de Finalización</span>
+                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{getEndDate() ? new Date(getEndDate()).toLocaleDateString() : '___/___/___'}</div>
                             </div>
                         </div>
                     </div>
 
-                    <p><strong>Diagnóstico / Motivo:</strong> {dx || '__________________________________________'}</p>
+                    <p style={{ marginTop: '0.5rem' }}><strong>Diagnóstico / Motivo:</strong> {dx || '__________________________________________'}</p>
 
                     {notes && (
-                        <div style={{ marginTop: '1.5rem' }}>
+                        <div style={{ marginTop: '0.8rem' }}>
                             <strong>Observaciones:</strong>
-                            <p style={{ marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>{notes}</p>
+                            <p style={{ marginTop: '0.3rem', whiteSpace: 'pre-wrap' }}>{notes}</p>
                         </div>
                     )}
                 </div>

@@ -41,16 +41,16 @@ const TravelCertificate: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title="Certificado Médico de Viaje">
-                <div style={{ fontSize: '1rem', lineHeight: '1.5', marginTop: '1rem', textAlign: 'justify', color: '#111827' }}>
-                    <p style={{ fontWeight: 600, textAlign: 'center', marginBottom: '1.5rem', fontSize: '1.2rem' }}>A QUIEN INTERESE:</p>
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.25', marginTop: '0.3rem', textAlign: 'justify', color: '#111827' }}>
+                    <p style={{ fontWeight: 600, textAlign: 'center', marginBottom: '0.8rem', fontSize: '0.9rem' }}>A QUIEN INTERESE:</p>
 
                     {templateText.split('\n').map((paragraph, idx) => (
-                        <p key={idx} style={{ marginBottom: '0.5rem', textIndent: '2rem' }}>{paragraph}</p>
+                        <p key={idx} style={{ marginBottom: '0.3rem', textIndent: '2rem' }}>{paragraph}</p>
                     ))}
 
-                    <div style={{ backgroundColor: '#f9fafb', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '1.5rem 0' }}>
-                        <h4 style={{ color: '#2563eb', marginBottom: '0.8rem', borderBottom: '1px solid #bfdbfe', paddingBottom: '0.3rem', fontFamily: 'Outfit, sans-serif' }}>Detalles del Viaje y Permisos</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
+                    <div style={{ backgroundColor: '#f9fafb', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '0.8rem 0' }}>
+                        <h4 style={{ color: '#2563eb', marginBottom: '0.4rem', borderBottom: '1px solid #bfdbfe', paddingBottom: '0.2rem', fontFamily: 'Outfit, sans-serif' }}>Detalles del Viaje y Permisos</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.3rem' }}>
                             {destination && (
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <strong>Destino Registrado:</strong> <span>{destination}</span>
@@ -61,13 +61,13 @@ const TravelCertificate: React.FC<Props> = ({ patient }) => {
                                     <strong>Fecha de Vuelo / Viaje:</strong> <span>{new Date(date).toLocaleDateString()}</span>
                                 </div>
                             )}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.3rem' }}>
                                 <strong>Restricciones de Traslado:</strong> <span>{restrictions}</span>
                             </div>
                         </div>
                     </div>
 
-                    <p style={{ marginTop: '1rem', textAlign: 'center', color: '#4b5563', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                    <p style={{ marginTop: '0.5rem', textAlign: 'center', color: '#4b5563', fontStyle: 'italic', fontSize: '0.75rem' }}>
                         Este certificado se expide a solicitud del paciente para los fines pertinentes.
                     </p>
                 </div>

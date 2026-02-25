@@ -76,31 +76,33 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title={`Recomendaciones: ${surgery || 'Procedimientos'}`}>
-                {preText && (type === 'Ambas' || type === 'Preoperatorias') && (
-                    <div className="recommendations-section">
-                        <h3>Instrucciones Preoperatorias</h3>
-                        <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: '#374151' }}>
-                            {preText.split('\n').filter(line => line.trim()).map((line, i) => (
-                                <li key={i} style={{ marginBottom: '0.5rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.4', marginTop: '0.5rem', color: '#1f2937' }}>
+                    {preText && (type === 'Ambas' || type === 'Preoperatorias') && (
+                        <div className="recommendations-section" style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '0.9rem', marginBottom: '0.2rem' }}>Instrucciones Preoperatorias</h3>
+                            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.2rem', color: '#374151' }}>
+                                {preText.split('\n').filter(line => line.trim()).map((line, i) => (
+                                    <li key={i} style={{ marginBottom: '0.2rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
-                {postText && (type === 'Ambas' || type === 'Postoperatorias') && (
-                    <div className="recommendations-section">
-                        <h3>Instrucciones Postoperatorias</h3>
-                        <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: '#374151' }}>
-                            {postText.split('\n').filter(line => line.trim()).map((line, i) => (
-                                <li key={i} style={{ marginBottom: '0.5rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                    {postText && (type === 'Ambas' || type === 'Postoperatorias') && (
+                        <div className="recommendations-section" style={{ marginBottom: '1rem' }}>
+                            <h3 style={{ fontSize: '0.9rem', marginBottom: '0.2rem' }}>Instrucciones Postoperatorias</h3>
+                            <ul style={{ paddingLeft: '1.5rem', marginTop: '0.2rem', color: '#374151' }}>
+                                {postText.split('\n').filter(line => line.trim()).map((line, i) => (
+                                    <li key={i} style={{ marginBottom: '0.2rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
-                {!preText && !postText && (
-                    <p>Seleccione o escriba las recomendaciones a imprimir.</p>
-                )}
+                    {!preText && !postText && (
+                        <p>Seleccione o escriba las recomendaciones a imprimir.</p>
+                    )}
+                </div>
             </PrintLayout>
         </div>
     );

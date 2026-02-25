@@ -84,21 +84,23 @@ const Imaging: React.FC<Props> = ({ patient }) => {
             </div>
 
             <PrintLayout patient={patient} title="Imágenes Diagnósticas">
-                {dx && <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}><strong>Motivo / Diagnóstico:</strong> {dx}</p>}
-                <p style={{ marginBottom: '1rem', fontWeight: 600 }}>Se solicita amablemente realizar los siguientes estudios imagenológicos:</p>
+                <div style={{ fontSize: '0.8rem', lineHeight: '1.4', marginTop: '0.5rem', color: '#1f2937' }}>
+                    {dx && <p style={{ marginBottom: '1rem', fontSize: '0.9rem' }}><strong>Motivo / Diagnóstico:</strong> {dx}</p>}
+                    <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>Se solicita amablemente realizar los siguientes estudios imagenológicos:</p>
 
-                <ul className="print-list">
-                    {studies.filter(s => s.name).map((study, idx) => (
-                        <li key={idx} className="print-list-item">
-                            <div className="print-item-title">{idx + 1}. {study.name}</div>
-                            <p className="print-item-desc"><strong>Indicación:</strong> {study.reason || 'S/A'}</p>
-                            <p className="print-item-desc" style={{ marginTop: '0.25rem' }}><em>Entregar en formato: {study.format}</em></p>
-                        </li>
-                    ))}
-                    {studies.filter(s => s.name).length === 0 && (
-                        <p>No hay estudios solicitados todavía.</p>
-                    )}
-                </ul>
+                    <ul className="print-list" style={{ marginTop: '0.5rem' }}>
+                        {studies.filter(s => s.name).map((study, idx) => (
+                            <li key={idx} className="print-list-item" style={{ marginBottom: '0.5rem', paddingBottom: '0.5rem' }}>
+                                <div className="print-item-title" style={{ fontSize: '0.85rem' }}>{idx + 1}. {study.name}</div>
+                                <p className="print-item-desc" style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}><strong>Indicación:</strong> {study.reason || 'S/A'}</p>
+                                <p className="print-item-desc" style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}><em>Entregar en formato: {study.format}</em></p>
+                            </li>
+                        ))}
+                        {studies.filter(s => s.name).length === 0 && (
+                            <p>No hay estudios solicitados todavía.</p>
+                        )}
+                    </ul>
+                </div>
             </PrintLayout>
         </div>
     );
