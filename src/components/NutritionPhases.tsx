@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Download, Loader2 } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
+import { usePDF } from '../hooks/usePDF';
 
 interface Props {
     patient: any;
@@ -8,14 +10,14 @@ interface Props {
 
 const NutritionPhases: React.FC<Props> = ({ patient }) => {
     const { nutrition: catalogNutrition } = useConfig();
+    const printRef = useRef<HTMLDivElement>(null);
+    const { downloadPDF, downloading } = usePDF();
     const [phases, setPhases] = useState(
         catalogNutrition.map(p => ({ ...p, selected: true }))
     );
 
-    // Re-sync if catalog updates (optional, but good if they change config then come back)
     useEffect(() => {
         setPhases(current => {
-            // Keep selected state if possible, otherwise true
             return catalogNutrition.map(p => {
                 const existing = current.find(c => c.id === p.id);
                 return { ...p, selected: existing ? existing.selected : true };
@@ -35,10 +37,27 @@ const NutritionPhases: React.FC<Props> = ({ patient }) => {
         setPhases(phases.map(p => p.id === id ? { ...p, desc: text } : p));
     };
 
+    const handleDownload = () => {
+        if (printRef.current) {
+            downloadPDF(printRef.current, `PlanNutricional_${patient.name || 'Paciente'}.pdf`);
+        }
+    };
+
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1rem' }}>Recomendaciones Nutricionales (Fases)</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Recomendaciones Nutricionales (Fases)</h2>
+                    <button
+                        className="action-btn primary"
+                        onClick={handleDownload}
+                        disabled={downloading}
+                        style={{ borderRadius: '8px', padding: '0.6rem 1rem' }}
+                    >
+                        {downloading ? <Loader2 size={18} className="spin" /> : <Download size={18} />}
+                        <span>{downloading ? 'Generando...' : 'Descargar PDF'}</span>
+                    </button>
+                </div>
 
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                     <label className="form-label">Reglas y Tips Generales (Aparece al principio)</label>
@@ -80,35 +99,43 @@ const NutritionPhases: React.FC<Props> = ({ patient }) => {
                 </div>
             </div>
 
-            <PrintLayout patient={patient} title="Plan Nutricional Post-operatorio">
-                {generalTips && (
-                    <div className="recommendations-section" style={{ backgroundColor: '#f0f9ff', padding: '1rem', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-                        <h3 style={{ color: '#1e40af', borderBottomColor: '#93c5fd' }}>Recomendaciones Generales Diario</h3>
-                        <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: '#1e3a8a' }}>
-                            {generalTips.split('\n').filter(line => line.trim()).map((line, i) => (
-                                <li key={i} style={{ marginBottom: '0.25rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
+            <div ref={printRef} className="print-only">
+                <PrintLayout patient={patient} title="PLAN NUTRICIONAL POST-OPERATORIO">
+                    <div style={{ color: '#1f2937', fontSize: '10pt', lineHeight: '1.5' }}>
+                        {generalTips && (
+                            <div className="recommendations-section" style={{ backgroundColor: '#f0f9ff', padding: '1rem', borderRadius: '8px', border: '1px solid #bfdbfe', marginBottom: '1.5rem' }}>
+                                <h3 style={{ color: '#1e40af', borderBottom: '2px solid #93c5fd', paddingBottom: '0.25rem', marginBottom: '0.75rem', fontSize: '11pt', fontWeight: 700 }}>RECOMENDACIONES GENERALES DIARIAS</h3>
+                                <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: '#1e3a8a' }}>
+                                    {generalTips.split('\n').filter(line => line.trim()).map((line, i) => (
+                                        <li key={i} style={{ marginBottom: '0.4rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: '1.5rem' }}>
+                            {phases.filter(p => p.selected).map((phase, idx) => (
+                                <div key={idx} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px dashed #e5e7eb' }}>
+                                    <h4 style={{ fontSize: '11pt', color: '#111827', marginBottom: '0.5rem', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        {phase.name}
+                                    </h4>
+                                    <p style={{ color: '#4b5563', lineHeight: '1.6', textAlign: 'justify' }}>
+                                        {phase.desc}
+                                    </p>
+                                </div>
                             ))}
-                        </ul>
-                    </div>
-                )}
-
-                <div style={{ marginTop: '2rem' }}>
-                    {phases.filter(p => p.selected).map((phase, idx) => (
-                        <div key={idx} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px dashed #e5e7eb' }}>
-                            <h4 style={{ fontSize: '1.1rem', color: '#111827', marginBottom: '0.5rem', fontFamily: 'Outfit, sans-serif' }}>
-                                {phase.name}
-                            </h4>
-                            <p style={{ color: '#4b5563', lineHeight: '1.6' }}>
-                                {phase.desc}
-                            </p>
                         </div>
-                    ))}
-                </div>
 
-                {phases.filter(p => p.selected).length === 0 && (
-                    <p>Seleccione al menos una fase para imprimir el plan nutricional.</p>
-                )}
-            </PrintLayout>
+                        {phases.filter(p => p.selected).length === 0 && (
+                            <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '2rem' }}>Seleccione al menos una fase para imprimir el plan nutricional.</p>
+                        )}
+                    </div>
+                </PrintLayout>
+            </div>
+            <style>{`
+                .spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </div>
     );
 };

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useConfig } from '../context/ConfigContext';
-import { Plus, X, Save, ShieldCheck, Mail } from 'lucide-react';
+import { Plus, X, Save, ShieldCheck, Mail, Loader2, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import { getStoredPin, setStoredPin } from './PinLock';
+import { supabase } from '../lib/supabase';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('general');
@@ -13,7 +14,9 @@ const Settings: React.FC = () => {
         { id: 'labs', label: 'Laboratorios' },
         { id: 'imaging', label: 'Imágenes' },
         { id: 'surgeries', label: 'Cirugías' },
-        { id: 'nutrition', label: 'Nutrición' }
+        { id: 'nutrition', label: 'Nutrición' },
+        { id: 'services', label: '💰 Catálogo Servicios' },
+        { id: 'proposal', label: '📄 Textos Presupuesto' },
     ];
 
     const renderContent = () => {
@@ -32,6 +35,10 @@ const Settings: React.FC = () => {
                 return <SurgeryConfig />;
             case 'nutrition':
                 return <NutritionConfig />;
+            case 'services':
+                return <ServicesConfig />;
+            case 'proposal':
+                return <ProposalConfig />;
             default:
                 return null;
         }
@@ -449,6 +456,224 @@ const NutritionConfig: React.FC = () => {
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Fase</button>
                 <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Catálogo</button>
+            </div>
+        </div>
+    );
+};
+
+// ─── Services Catalog Config (Supabase) ───────────────────────────────────────
+const QUOTE_CATEGORIES = ['Cirugías Corporales', 'Cirugías Faciales', 'Tecnologías', 'Gastos Adicionales'];
+
+interface QuoteService {
+    id: string;
+    name: string;
+    category: string;
+    price: number;
+    description?: string;
+    active: boolean;
+}
+
+const ServicesConfig: React.FC = () => {
+    const [services, setServices] = useState<QuoteService[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState<string | null>(null);
+    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+    // New service form
+    const [newName, setNewName] = useState('');
+    const [newCategory, setNewCategory] = useState(QUOTE_CATEGORIES[0]);
+    const [newPrice, setNewPrice] = useState('');
+    const [newDesc, setNewDesc] = useState('');
+
+    const showMsg = (text: string, ok: boolean) => {
+        setMsg({ text, ok });
+        setTimeout(() => setMsg(null), 3000);
+    };
+
+    const load = async () => {
+        setLoading(true);
+        const { data } = await supabase.from('quote_services').select('*').order('category').order('name');
+        if (data) setServices(data);
+        setLoading(false);
+    };
+
+    useEffect(() => { load(); }, []);
+
+    const toggleActive = async (svc: QuoteService) => {
+        setSaving(svc.id);
+        const { error } = await supabase.from('quote_services').update({ active: !svc.active }).eq('id', svc.id);
+        if (!error) setServices(prev => prev.map(s => s.id === svc.id ? { ...s, active: !s.active } : s));
+        else showMsg('Error actualizando el servicio.', false);
+        setSaving(null);
+    };
+
+    const deleteService = async (id: string) => {
+        if (!confirm('¿Eliminar este servicio del catálogo?')) return;
+        setSaving(id);
+        const { error } = await supabase.from('quote_services').delete().eq('id', id);
+        if (!error) setServices(prev => prev.filter(s => s.id !== id));
+        else showMsg('Error eliminando el servicio.', false);
+        setSaving(null);
+    };
+
+    const addService = async () => {
+        if (!newName.trim() || !newPrice) { showMsg('Nombre y precio son obligatorios.', false); return; }
+        const price = parseFloat(newPrice.replace(/[^0-9.]/g, ''));
+        if (isNaN(price) || price < 0) { showMsg('El precio debe ser un número válido.', false); return; }
+        setSaving('new');
+        const { data, error } = await supabase.from('quote_services')
+            .insert({ name: newName.trim(), category: newCategory, price, description: newDesc.trim() || null })
+            .select().single();
+        if (!error && data) {
+            setServices(prev => [...prev, data].sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)));
+            setNewName(''); setNewPrice(''); setNewDesc('');
+            showMsg('✅ Servicio agregado correctamente.', true);
+        } else showMsg('Error al agregar el servicio.', false);
+        setSaving(null);
+    };
+
+    const grouped = QUOTE_CATEGORIES.map(cat => ({
+        category: cat,
+        items: services.filter(s => s.category === cat),
+    })).filter(g => g.items.length > 0);
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+            {/* Add New Service */}
+            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <h3 style={{ margin: 0, color: 'var(--primary)' }}>Agregar Nuevo Servicio</h3>
+                <div className="form-row" style={{ width: '100%', marginBottom: 0 }}>
+                    <div className="form-group" style={{ flex: 2 }}>
+                        <label className="form-label">Nombre del Servicio *</label>
+                        <input className="form-input" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ej: Toxina Botulínica" />
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Categoría *</label>
+                        <select className="form-input" value={newCategory} onChange={e => setNewCategory(e.target.value)}>
+                            {QUOTE_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Precio Base (COP) *</label>
+                        <input className="form-input" type="number" min={0} value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Ej: 450000" />
+                    </div>
+                </div>
+                <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">Descripción Informativa para el Paciente (aparecerá en el presupuesto)</label>
+                    <textarea className="form-input" value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Ej: Cirugía diseñada para mejorar el contorno corporal mediante la extracción de grasa..." style={{ minHeight: '80px' }} />
+                </div>
+                <button
+                    className="action-btn primary"
+                    onClick={addService}
+                    disabled={saving === 'new'}
+                >
+                    {saving === 'new' ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={16} />}
+                    {saving === 'new' ? 'Guardando...' : 'Agregar Servicio'}
+                </button>
+                {msg && (
+                    <p style={{ color: msg.ok ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '0.9rem', margin: 0 }}>{msg.text}</p>
+                )}
+            </div>
+
+            {/* Services List */}
+            {loading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--text-muted)', padding: '1.5rem' }}>
+                    <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> Cargando catálogo...
+                </div>
+            ) : (
+                grouped.map(group => (
+                    <div key={group.category}>
+                        <h4 style={{ color: 'var(--primary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.4rem', marginBottom: '0.75rem' }}>
+                            {group.category} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({group.items.length})</span>
+                        </h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {group.items.map(svc => (
+                                <div key={svc.id} className="item-card" style={{
+                                    opacity: svc.active ? 1 : 0.5,
+                                    gap: '0.75rem',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                }}>
+                                    <div style={{ flex: 2, minWidth: '160px' }}>
+                                        <div style={{ fontWeight: 600 }}>{svc.name}</div>
+                                        {svc.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '0.2rem' }}>{svc.description}</div>}
+                                    </div>
+                                    <div style={{ color: 'var(--primary)', fontWeight: 700, minWidth: '110px', textAlign: 'right' }}>
+                                        $ {svc.price.toLocaleString('es-CO')}
+                                    </div>
+                                    <button
+                                        onClick={() => toggleActive(svc)}
+                                        disabled={saving === svc.id}
+                                        title={svc.active ? 'Desactivar' : 'Activar'}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: svc.active ? '#22c55e' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.82rem', fontWeight: 500 }}
+                                    >
+                                        {saving === svc.id ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : svc.active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                                        {svc.active ? 'Activo' : 'Inactivo'}
+                                    </button>
+                                    <button
+                                        onClick={() => deleteService(svc.id)}
+                                        disabled={saving === svc.id}
+                                        className="remove-btn"
+                                        title="Eliminar servicio"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))
+            )}
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
+};
+
+const ProposalConfig: React.FC = () => {
+    const { proposalIntro, proposalPolicies, updateCatalog } = useConfig();
+    const [intro, setIntro] = useState(proposalIntro || '');
+    const [pol, setPol] = useState(proposalPolicies || '');
+
+    const handleSave = () => {
+        updateCatalog('proposalIntro', intro);
+        updateCatalog('proposalPolicies', pol);
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1.5rem' }}>
+                <h3 style={{ margin: 0 }}>Textos Predeterminados para Presupuesto Médico</h3>
+                <p style={{ color: 'var(--text-muted)' }}>
+                    Configura los textos que aparecerán automáticamente en cada nuevo presupuesto creado.
+                    Puedes usar el marcador <strong>{`{{paciente}}`}</strong> para que la aplicación inserte el nombre del paciente automáticamente.
+                </p>
+
+                <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">Introducción del Presupuesto</label>
+                    <textarea
+                        className="form-input"
+                        value={intro}
+                        onChange={e => setIntro(e.target.value)}
+                        placeholder="Ej: Estimada(o) {{paciente}}, es un placer..."
+                        style={{ minHeight: '120px', lineHeight: '1.5' }}
+                    />
+                </div>
+
+                <div className="form-group" style={{ width: '100%' }}>
+                    <label className="form-label">Políticas y Notas Comerciales</label>
+                    <textarea
+                        className="form-input"
+                        value={pol}
+                        onChange={e => setPol(e.target.value)}
+                        placeholder="Ej: • El descuento por pronto pago..."
+                        style={{ minHeight: '180px', lineHeight: '1.5' }}
+                    />
+                </div>
+
+                <div style={{ marginTop: '1rem' }}>
+                    <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Textos Predeterminados</button>
+                </div>
             </div>
         </div>
     );

@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { Download, Loader2 } from 'lucide-react';
 import PrintLayout from './PrintLayout';
+import { usePDF } from '../hooks/usePDF';
 
 interface Props {
     patient: any;
 }
 
 const TravelCertificate: React.FC<Props> = ({ patient }) => {
+    const printRef = useRef<HTMLDivElement>(null);
+    const { downloadPDF, downloading } = usePDF();
     const [destination, setDestination] = useState('');
     const [date, setDate] = useState('');
     const [restrictions, setRestrictions] = useState('Ninguna, paciente apto para viaje regular.');
@@ -13,10 +17,27 @@ const TravelCertificate: React.FC<Props> = ({ patient }) => {
         'Por medio de la presente certifico que he examinado clínica y físicamente al paciente referenciado, encontrándose en buenas condiciones generales de salud al momento de la evaluación.\n\nEl/la paciente no padece actualmente de enfermedades infectocontagiosas agudas ni presenta condiciones médicas que contraindiquen su traslado por vía aérea o terrestre comercial, por lo cual se considera APTO/A para viajar.'
     );
 
+    const handleDownload = () => {
+        if (printRef.current) {
+            downloadPDF(printRef.current, `CertificadoViaje_${patient.name || 'Paciente'}.pdf`);
+        }
+    };
+
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1rem' }}>Certificado Médico de Viaje</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Certificado Médico de Viaje</h2>
+                    <button
+                        className="action-btn primary"
+                        onClick={handleDownload}
+                        disabled={downloading}
+                        style={{ borderRadius: '8px', padding: '0.6rem 1rem' }}
+                    >
+                        {downloading ? <Loader2 size={18} className="spin" /> : <Download size={18} />}
+                        <span>{downloading ? 'Generando...' : 'Descargar PDF'}</span>
+                    </button>
+                </div>
 
                 <div className="form-row">
                     <div className="form-group" style={{ flex: 1 }}>
@@ -40,38 +61,44 @@ const TravelCertificate: React.FC<Props> = ({ patient }) => {
                 </div>
             </div>
 
-            <PrintLayout patient={patient} title="Certificado Médico de Viaje">
-                <div style={{ fontSize: '0.45rem', lineHeight: '1.05', marginTop: '0.05rem', textAlign: 'justify', color: '#111827' }}>
-                    <p style={{ fontWeight: 600, textAlign: 'center', marginBottom: '0.3rem', fontSize: '0.5rem' }}>A QUIEN INTERESE:</p>
+            <div ref={printRef} className="print-only">
+                <PrintLayout patient={patient} title="Certificado Médico de Viaje">
+                    <div style={{ lineHeight: '1.5', marginTop: '0.5rem', textAlign: 'justify', color: '#111827', fontSize: '10pt' }}>
+                        <p style={{ fontWeight: 700, textAlign: 'center', marginBottom: '0.75rem', fontSize: '11pt', color: '#1f2937' }}>A QUIEN INTERESE:</p>
 
-                    {templateText.split('\n').map((paragraph, idx) => (
-                        <p key={idx} style={{ marginBottom: '0.15rem', textIndent: '1rem' }}>{paragraph}</p>
-                    ))}
+                        {templateText.split('\n').filter(p => p.trim()).map((paragraph, idx) => (
+                            <p key={idx} style={{ marginBottom: '0.75rem', textIndent: '2rem' }}>{paragraph}</p>
+                        ))}
 
-                    <div style={{ backgroundColor: '#f9fafb', padding: '0.3rem', borderRadius: '8px', border: '1px solid #e5e7eb', margin: '0.3rem 0' }}>
-                        <h4 style={{ color: '#2563eb', marginBottom: '0.15rem', borderBottom: '1px solid #bfdbfe', paddingBottom: '0.1rem', fontFamily: 'Outfit, sans-serif', fontSize: '0.45rem' }}>Detalles del Viaje y Permisos</h4>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.15rem' }}>
-                            {destination && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <strong>Destino Registrado:</strong> <span>{destination}</span>
+                        <div style={{ backgroundColor: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', margin: '1rem 0' }}>
+                            <h4 style={{ color: '#2563eb', marginBottom: '0.5rem', borderBottom: '1px solid #bfdbfe', paddingBottom: '0.2rem', fontFamily: 'Outfit, sans-serif', fontSize: '10pt', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detalles del Viaje y Permisos</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.4rem', fontSize: '10pt' }}>
+                                {destination && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <strong>Destino Registrado:</strong> <span>{destination}</span>
+                                    </div>
+                                )}
+                                {date && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <strong>Fecha de Vuelo / Viaje:</strong> <span>{new Date(date).toLocaleDateString()}</span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.2rem' }}>
+                                    <strong>Restricciones de Traslado:</strong> <span>{restrictions}</span>
                                 </div>
-                            )}
-                            {date && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <strong>Fecha de Vuelo / Viaje:</strong> <span>{new Date(date).toLocaleDateString()}</span>
-                                </div>
-                            )}
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.15rem' }}>
-                                <strong>Restricciones de Traslado:</strong> <span>{restrictions}</span>
                             </div>
                         </div>
-                    </div>
 
-                    <p style={{ marginTop: '0.25rem', textAlign: 'center', color: '#4b5563', fontStyle: 'italic', fontSize: '0.4rem' }}>
-                        Este certificado se expide a solicitud del paciente para los fines pertinentes.
-                    </p>
-                </div>
-            </PrintLayout>
+                        <p style={{ marginTop: '1rem', textAlign: 'center', color: '#64748b', fontStyle: 'italic', fontSize: '9pt' }}>
+                            Este certificado se expide a solicitud del paciente para los fines pertinentes.
+                        </p>
+                    </div>
+                </PrintLayout>
+            </div>
+            <style>{`
+                .spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </div>
     );
 };

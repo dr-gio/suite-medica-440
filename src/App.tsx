@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './App.css';
-import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X } from 'lucide-react';
+import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet } from 'lucide-react';
 import PinLock, { useAutoLock } from './components/PinLock';
 import SharePanel from './components/SharePanel';
 import Prescriptions from './components/Prescriptions';
@@ -12,6 +12,7 @@ import SickLeave from './components/SickLeave';
 import TravelCertificate from './components/TravelCertificate';
 import Referral from './components/Referral';
 import Settings from './components/Settings';
+import EconomicProposal from './components/EconomicProposal';
 
 import { useConfig } from './context/ConfigContext';
 
@@ -43,6 +44,7 @@ function App() {
     { id: 'sickleave', label: 'Incapacidades', icon: <CalendarClock size={20} /> },
     { id: 'travel', label: 'Cert. Viaje', icon: <Plane size={20} /> },
     { id: 'referral', label: 'Remisiones', icon: <Send size={20} /> },
+    { id: 'proposal', label: 'Presupuesto', icon: <Wallet size={20} /> },
     { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} /> },
   ];
 
@@ -64,6 +66,8 @@ function App() {
         return <TravelCertificate patient={patient} />;
       case 'referral':
         return <Referral patient={patient} />;
+      case 'proposal':
+        return <EconomicProposal patient={patient} />;
       case 'settings':
         return <Settings />;
       default:
@@ -157,9 +161,9 @@ function App() {
         </header>
 
         {/* Global Patient Information Input Form (Not printed directly, just for entering data) */}
-        <div className="content-area no-print">
+        <div className="content-area">
           <div className="document-container">
-            <div className="form-section">
+            <div className="form-section no-print">
               <h2 className="form-label mb-2">Datos del Paciente</h2>
               <div className="form-row">
                 <div className="form-group">

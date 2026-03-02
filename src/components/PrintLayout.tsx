@@ -11,28 +11,27 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
     const { logoUrl, signatureUrl, sealUrl, doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
 
     return (
-        <div className="printable-document print-only">
+        <div className="printable-document">
             <div className="print-header">
                 <div className="clinic-info">
                     {logoUrl ? (
-                        <img src={logoUrl} alt="Logo" style={{ maxWidth: '200px', maxHeight: '70px', objectFit: 'contain', marginBottom: '0.25rem' }} />
+                        <img src={logoUrl} alt="Logo" crossOrigin="anonymous" style={{ maxWidth: '180px', maxHeight: '60px', objectFit: 'contain', marginBottom: '0.2rem' }} />
                     ) : (
-                        <h2>440 CLINIC</h2>
+                        <h2 style={{ fontSize: '1.2rem', marginBottom: '0.2rem' }}>440 CLINIC</h2>
                     )}
-                    <p style={{ fontWeight: 600, color: '#1f2937' }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
-                    <p>Cirujano Plástico Estético y Reconstructivo</p>
-                    <p>RETHUS: {rethus || 'CMC2017-222322'}</p>
-                    <p>{address || 'Cra 47 # 79-191, Barranquilla'}</p>
-                    <p>Tel: +57 {contactPhone || '3181800130'}</p>
-                    <p>{websiteUrl || 'www.drgiovannifuentes.com'}</p>
+                    <p style={{ fontWeight: 600, color: '#1f2937', fontSize: '9pt', margin: '0.1rem 0' }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
+                    <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>Cirujano Plástico Estético y Reconstructivo</p>
+                    <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
+                    <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>{address || 'Cra 47 # 79-191, Barranquilla'}</p>
+                    <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>Tel: +57 {contactPhone || '3181800130'} | {websiteUrl || 'www.drgiovannifuentes.com'}</p>
                 </div>
-                <div className="doc-info">
-                    <div className="doc-type">{title}</div>
-                    <div>{new Date(patient.date).toLocaleDateString()}</div>
+                <div className="doc-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end' }}>
+                    <div className="doc-type" style={{ fontSize: '1rem', marginBottom: '0.2rem' }}>{title}</div>
+                    <div style={{ fontSize: '9pt', color: '#4b5563' }}>{new Date(patient.date).toLocaleDateString()}</div>
                 </div>
             </div>
 
-            <div className="print-patient-info">
+            <div className="print-patient-info" style={{ marginBottom: '0.5rem' }}>
                 <div className="info-field">
                     <span className="info-label">Paciente</span>
                     <span className="info-value">{patient.name || '---'}</span>
@@ -41,35 +40,39 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
                     <span className="info-label">Identificación</span>
                     <span className="info-value">{patient.id || '---'}</span>
                 </div>
-                <div className="info-field" style={{ gridColumn: 'span 2' }}>
+                <div className="info-field">
                     <span className="info-label">Edad</span>
                     <span className="info-value">{patient.age || '---'}</span>
                 </div>
+                <div className="info-field">
+                    <span className="info-label">Fecha</span>
+                    <span className="info-value">{new Date(patient.date).toLocaleDateString()}</span>
+                </div>
             </div>
 
-            <div className="print-body">
+            <div className="print-body" style={{ minHeight: '100px', marginBottom: '0.75rem' }}>
                 {children}
             </div>
 
-            <div className="print-footer">
+            <div className="print-footer" style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
                 <div className="signature" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {signatureUrl ? (
-                        <img src={signatureUrl} alt="Firma" style={{ maxWidth: '200px', maxHeight: '70px', objectFit: 'contain', zIndex: 1, position: 'relative', marginBottom: '-10px' }} />
+                        <img src={signatureUrl} alt="Firma" crossOrigin="anonymous" style={{ maxWidth: '160px', maxHeight: '50px', objectFit: 'contain', zIndex: 1, position: 'relative', marginBottom: '-8px' }} />
                     ) : (
-                        <div style={{ height: '60px' }} />
+                        <div style={{ height: '40px' }} />
                     )}
 
-                    <div className="signature-line" style={{ borderTop: '1px solid #1f2937', width: '250px', paddingTop: '0.5rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>
+                    <div className="signature-line" style={{ borderTop: '1px solid #1f2937', width: '220px', paddingTop: '0.3rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>
                         {sealUrl && (
-                            <img src={sealUrl} alt="Sello" style={{ position: 'absolute', right: '-80px', bottom: '0px', width: '120px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
+                            <img src={sealUrl} alt="Sello" crossOrigin="anonymous" style={{ position: 'absolute', right: '-60px', bottom: '0px', width: '90px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
                         )}
-                        <p style={{ fontWeight: 600, color: '#1f2937', position: 'relative', zIndex: 3 }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
-                        <p style={{ fontSize: '10pt', color: '#666', position: 'relative', zIndex: 3 }}>Cirujano Plástico Estético y Reconstructivo</p>
-                        <p style={{ fontSize: '10pt', color: '#666', position: 'relative', zIndex: 3 }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
+                        <p style={{ fontWeight: 700, color: '#111827', fontSize: '9pt', margin: 0 }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
+                        <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>Cirujano Plástico Estético y Reconstructivo</p>
+                        <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
                     </div>
                 </div>
-                <div className="qr-placeholder">
-                    <div>Validez Legal<br />QR</div>
+                <div className="qr-placeholder" style={{ width: '60px', height: '60px', fontSize: '8px' }}>
+                    <div style={{ textAlign: 'center' }}>Validez<br />Digital<br />QR</div>
                 </div>
             </div>
         </div>

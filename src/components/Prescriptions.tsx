@@ -1,7 +1,8 @@
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Download, Loader2 } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
-import { useState } from 'react'; // Added useState import
+import { useState, useRef } from 'react';
+import { usePDF } from '../hooks/usePDF';
 
 interface Props {
     patient: any;
@@ -9,6 +10,8 @@ interface Props {
 
 const Prescriptions: React.FC<Props> = ({ patient }) => {
     const { medications } = useConfig();
+    const printRef = useRef<HTMLDivElement>(null);
+    const { downloadPDF, downloading } = usePDF();
     const [meds, setMeds] = useState([
         { name: '', dosage: '', frequency: '', duration: '', indications: '' }
     ]);
@@ -34,20 +37,37 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
         setMeds(newMeds);
     };
 
+    const handleDownload = () => {
+        if (printRef.current) {
+            downloadPDF(printRef.current, `Formula_${patient.name || 'Paciente'}.pdf`);
+        }
+    };
+
     return (
         <div className="tool-view">
             {/* Editor View */}
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1rem' }}>Fórmula Médica</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Fórmula Médica</h2>
+                    <button
+                        className="action-btn primary"
+                        onClick={handleDownload}
+                        disabled={downloading}
+                        style={{ borderRadius: '8px', padding: '0.6rem 1rem' }}
+                    >
+                        {downloading ? <Loader2 size={18} className="spin" /> : <Download size={18} />}
+                        <span>{downloading ? 'Generando...' : 'Descargar PDF'}</span>
+                    </button>
+                </div>
 
                 <datalist id="medications-list">
                     {medications.map(m => <option key={m.id} value={m.name} />)}
                 </datalist>
 
                 {meds.map((med, index) => (
-                    <div key={index} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1rem' }}>
+                    <div key={index} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1rem', borderLeft: '4px solid var(--primary-light)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>Medicamento #{index + 1}</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>Medicamento #{index + 1}</span>
                             <button className="remove-btn" onClick={() => removeMed(index)}><X size={18} /></button>
                         </div>
 
@@ -80,29 +100,38 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
                     </div>
                 ))}
 
-                <button className="action-btn add-btn" onClick={addMed}>
+                <button className="action-btn add-btn" onClick={addMed} style={{ borderStyle: 'dashed', width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}>
                     <Plus size={18} />
                     Agregar Medicamento
                 </button>
             </div>
 
             {/* Print View */}
-            <PrintLayout patient={patient} title="Fórmula Médica">
-                <div style={{ fontSize: '0.8rem', lineHeight: '1.4', marginTop: '0.5rem', color: '#1f2937' }}>
-                    <ul className="print-list" style={{ marginTop: '0.5rem' }}>
-                        {meds.filter(m => m.name).map((med, idx) => (
-                            <li key={idx} className="print-list-item" style={{ marginBottom: '0.5rem', paddingBottom: '0.5rem' }}>
-                                <div className="print-item-title" style={{ fontSize: '0.85rem' }}>{idx + 1}. {med.name} {med.dosage && `- ${med.dosage}`}</div>
-                                {med.frequency && <p className="print-item-desc" style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}><strong>Tomar:</strong> {med.frequency} {med.duration && `por ${med.duration}`}</p>}
-                                {med.indications && <p className="print-item-desc" style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}><em>Indicaciones: {med.indications}</em></p>}
-                            </li>
-                        ))}
-                        {meds.filter(m => m.name).length === 0 && (
-                            <p>No hay medicamentos recetados todavía.</p>
-                        )}
-                    </ul>
-                </div>
-            </PrintLayout>
+            <div ref={printRef} className="print-only">
+                <PrintLayout patient={patient} title="Fórmula Médica">
+                    <div style={{ lineHeight: '1.5', marginTop: '0.5rem', color: '#1f2937' }}>
+                        <ul className="print-list" style={{ marginTop: '0.5rem' }}>
+                            {meds.filter(m => m.name).map((med, idx) => (
+                                <li key={idx} className="print-list-item" style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px dashed #e5e7eb' }}>
+                                    <div className="print-item-title" style={{ fontSize: '10pt', fontWeight: 700 }}>{idx + 1}. {med.name} {med.dosage && `- ${med.dosage}`}</div>
+                                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.2rem' }}>
+                                        {med.frequency && <p className="print-item-desc" style={{ fontSize: '9pt', margin: 0 }}><strong>Frecuencia:</strong> {med.frequency}</p>}
+                                        {med.duration && <p className="print-item-desc" style={{ fontSize: '9pt', margin: 0 }}><strong>Duración:</strong> {med.duration}</p>}
+                                    </div>
+                                    {med.indications && <p className="print-item-desc" style={{ marginTop: '0.25rem', fontSize: '9pt', color: '#4b5563', fontStyle: 'italic' }}>Indicaciones: {med.indications}</p>}
+                                </li>
+                            ))}
+                            {meds.filter(m => m.name).length === 0 && (
+                                <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '2rem' }}>No hay medicamentos recetados todavía.</p>
+                            )}
+                        </ul>
+                    </div>
+                </PrintLayout>
+            </div>
+            <style>{`
+                .spin { animation: spin 1s linear infinite; }
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            `}</style>
         </div>
     );
 };

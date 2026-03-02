@@ -10,7 +10,7 @@
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-color: #e2e8f0;
-  
+
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.5);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
@@ -23,7 +23,7 @@
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --border-color: #334155;
-    
+
     --glass-bg: rgba(30, 41, 59, 0.7);
     --glass-border: rgba(255, 255, 255, 0.05);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
@@ -55,13 +55,18 @@ body::before {
   height: 100vh;
   z-index: -1;
   background: radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.08), transparent 25%),
-              radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08), transparent 25%);
+    radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08), transparent 25%);
   animation: bgPulse 15s ease-in-out infinite alternate;
 }
 
 @keyframes bgPulse {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.1); }
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.1);
+  }
 }
 
 button {
@@ -72,7 +77,9 @@ button {
   outline: none;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   font-family: inherit;
 }
 
@@ -81,11 +88,11 @@ input, textarea, select {
     background: white;
     color: black;
   }
-  
+
   body::before {
     display: none;
   }
-  
+
   .no-print {
     display: none !important;
   }
@@ -93,11 +100,25 @@ input, textarea, select {
   .print-only {
     display: block !important;
   }
-  
+
   .print-area {
     padding: 0;
     margin: 0;
     box-shadow: none;
     border: none;
   }
+}
+
+/* Fix for PDF generation tools like html2pdf.js */
+.is-capturing-pdf .print-only {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 99999 !important;
+}
+
+/* Base print-only should be hidden unless in media print or forced via class */
+.print-only {
+  display: none;
 }
