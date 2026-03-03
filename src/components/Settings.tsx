@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '../context/ConfigContext';
-import { Plus, X, Save, ShieldCheck, Mail, Loader2, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
+import { Plus, X, Save, ShieldCheck, Mail, Loader2, ToggleLeft, ToggleRight, Trash2, FileText, Upload } from 'lucide-react';
 import { getStoredPin, setStoredPin } from './PinLock';
 import { supabase } from '../lib/supabase';
 
@@ -15,6 +15,7 @@ const Settings: React.FC = () => {
         { id: 'imaging', label: 'Imágenes' },
         { id: 'surgeries', label: 'Cirugías' },
         { id: 'nutrition', label: 'Nutrición' },
+        { id: 'documents', label: 'Archivos de Venta' },
         { id: 'services', label: '💰 Catálogo Servicios' },
         { id: 'proposal', label: '📄 Textos Presupuesto' },
     ];
@@ -35,6 +36,8 @@ const Settings: React.FC = () => {
                 return <SurgeryConfig />;
             case 'nutrition':
                 return <NutritionConfig />;
+            case 'documents':
+                return <DocumentsConfig />;
             case 'services':
                 return <ServicesConfig />;
             case 'proposal':
@@ -674,6 +677,133 @@ const ProposalConfig: React.FC = () => {
                 <div style={{ marginTop: '1rem' }}>
                     <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Textos Predeterminados</button>
                 </div>
+            </div>
+        </div>
+    );
+};
+
+const DocumentsConfig: React.FC = () => {
+    const [files, setFiles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
+    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+    const showMsg = (text: string, ok: boolean) => {
+        setMsg({ text, ok });
+        setTimeout(() => setMsg(null), 3000);
+    };
+
+    const loadFiles = async () => {
+        setLoading(true);
+        const { data, error } = await supabase.storage.from('sales_documents').list();
+        if (error) {
+            console.error(error);
+            showMsg('Error cargando documentos. ¿Existe el bucket "sales_documents"?', false);
+        } else if (data) {
+            setFiles(data.filter(f => f.name !== '.emptyFolderPlaceholder'));
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => { loadFiles(); }, []);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
+
+        const { error } = await supabase.storage.from('sales_documents').upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+        });
+
+        if (error) {
+            console.error(error);
+            showMsg('Error subiendo al archivo.', false);
+        } else {
+            showMsg('Archivo subido correctamente.', true);
+            loadFiles();
+        }
+        setUploading(false);
+        e.target.value = ''; // Reset input
+    };
+
+    const handleDelete = async (fileName: string) => {
+        if (!confirm(`¿Eliminar el archivo ${fileName}?`)) return;
+
+        const { error } = await supabase.storage.from('sales_documents').remove([fileName]);
+        if (error) {
+            console.error(error);
+            showMsg('Error eliminando el archivo.', false);
+        } else {
+            showMsg('Archivo eliminado.', true);
+            setFiles(prev => prev.filter(f => f.name !== fileName));
+        }
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1.5rem' }}>
+                <h3 style={{ margin: 0 }}>Gestión de Archivos de Venta</h3>
+                <p style={{ color: 'var(--text-muted)' }}>
+                    Sube documentos (PDF, DOCX, imágenes) para que el equipo de ventas pueda descargarlos desde la sección principal.
+                </p>
+
+                <div style={{ padding: '2rem', border: '2px dashed var(--border-color)', borderRadius: '8px', width: '100%', textAlign: 'center', backgroundColor: 'var(--bg-color)' }}>
+                    <input
+                        type="file"
+                        id="doc-upload"
+                        style={{ display: 'none' }}
+                        onChange={handleUpload}
+                        disabled={uploading}
+                    />
+                    <label htmlFor="doc-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        {uploading ? (
+                            <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary)' }} />
+                        ) : (
+                            <Upload size={32} style={{ color: 'var(--primary)' }} />
+                        )}
+                        <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>
+                            {uploading ? 'Subiendo archivo...' : 'Haz clic para subir un documento'}
+                        </span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Max 50MB (PDF, DOCX, etc.)</span>
+                    </label>
+                </div>
+
+                {msg && (
+                    <div style={{ padding: '0.75rem 1rem', borderRadius: '6px', backgroundColor: msg.ok ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: msg.ok ? '#15803d' : '#b91c1c', width: '100%', fontWeight: 500 }}>
+                        {msg.text}
+                    </div>
+                )}
+            </div>
+
+            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <h4 style={{ margin: 0, color: 'var(--primary)' }}>Documentos Subidos ({files.length})</h4>
+
+                {loading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+                        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Cargando...
+                    </div>
+                ) : files.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No hay documentos subidos actualmente.</p>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                        {files.map(f => (
+                            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'white' }}>
+                                <FileText size={20} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                                <div style={{ flex: 1, overflow: 'hidden' }}>
+                                    <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name.replace(/^\d+_/, '')}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{f.metadata?.size ? (f.metadata.size / 1024 / 1024).toFixed(2) : 0} MB</div>
+                                </div>
+                                <button className="remove-btn" onClick={() => handleDelete(f.name)} title="Eliminar documento">
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
