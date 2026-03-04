@@ -77,7 +77,7 @@ const SalesTools: React.FC = () => {
                                             <FileText size={28} />
                                         </div>
                                         <div style={{ flex: 1, overflow: 'hidden' }}>
-                                            <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.4rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: '1.3' }} title={f.name.replace(/^\d+_/, '')}>
+                                            <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.4rem', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: '1.3', color: '#1a1a2e' }} title={f.name.replace(/^\d+_/, '')}>
                                                 {f.name.replace(/^\d+_/, '')}
                                             </div>
                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>

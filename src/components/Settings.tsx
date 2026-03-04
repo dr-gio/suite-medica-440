@@ -3,6 +3,7 @@ import { useConfig } from '../context/ConfigContext';
 import { Plus, X, Save, ShieldCheck, Mail, Loader2, ToggleLeft, ToggleRight, Trash2, FileText, Upload } from 'lucide-react';
 import { getStoredPin, setStoredPin } from './PinLock';
 import { supabase } from '../lib/supabase';
+import KnowledgeBaseEditor from './KnowledgeBaseEditor';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('general');
@@ -18,6 +19,7 @@ const Settings: React.FC = () => {
         { id: 'documents', label: 'Archivos de Venta' },
         { id: 'services', label: '💰 Catálogo Servicios' },
         { id: 'proposal', label: '📄 Textos Presupuesto' },
+        { id: 'ai-knowledge', label: '🧠 Base de IA' },
     ];
 
     const renderContent = () => {
@@ -42,6 +44,8 @@ const Settings: React.FC = () => {
                 return <ServicesConfig />;
             case 'proposal':
                 return <ProposalConfig />;
+            case 'ai-knowledge':
+                return <KnowledgeBaseEditor />;
             default:
                 return null;
         }
@@ -91,6 +95,13 @@ const GeneralConfig: React.FC = () => {
     const [signature, setSignature] = useState<string | undefined>(signatureUrl);
     const [seal, setSeal] = useState<string | undefined>(sealUrl);
     const [gmailId, setGmailId] = useState(gmailClientId || '');
+    const [saved, setSaved] = useState(false);
+
+    useEffect(() => {
+        setLogo(logoUrl);
+        setSignature(signatureUrl);
+        setSeal(sealUrl);
+    }, [logoUrl, signatureUrl, sealUrl]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | undefined>>) => {
         const file = e.target.files?.[0];
@@ -104,10 +115,20 @@ const GeneralConfig: React.FC = () => {
     };
 
     const handleSave = () => {
-        updateCatalog('logoUrl', logo);
-        updateCatalog('signatureUrl', signature);
-        updateCatalog('sealUrl', seal);
+        // Use batch update to avoid multiple localStorage writes/reads and state race conditions
+        const { updateImagesBatch } = useConfig() as any; // Cast if interface not updated yet, but I updated it
+        if (updateImagesBatch) {
+            updateImagesBatch({ logo, signature, seal });
+        } else {
+            // Fallback if not updated (should not happen)
+            updateCatalog('logoUrl', logo);
+            updateCatalog('signatureUrl', signature);
+            updateCatalog('sealUrl', seal);
+        }
+
         updateCatalog('gmailClientId', gmailId || undefined);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
     };
 
     return (
@@ -189,8 +210,9 @@ const GeneralConfig: React.FC = () => {
                 <PinChangeConfig />
             </div>
 
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Logo, Firma y Sello</button>
+                {saved && <span style={{ color: '#22c55e', fontWeight: 600, fontSize: '0.95rem' }}>✅ ¡Guardado correctamente!</span>}
             </div>
         </div>
     );
@@ -687,6 +709,9 @@ const DocumentsConfig: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
+    const [customName, setCustomName] = useState('');
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const showMsg = (text: string, ok: boolean) => {
         setMsg({ text, ok });
@@ -707,14 +732,24 @@ const DocumentsConfig: React.FC = () => {
 
     useEffect(() => { loadFiles(); }, []);
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const baseName = file.name.replace(/\.[^.]+$/, '');
+        setPendingFile(file);
+        setCustomName(baseName);
+        e.target.value = '';
+    };
+
+    const handleUpload = async () => {
+        if (!pendingFile || !customName.trim()) return;
 
         setUploading(true);
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
+        const ext = pendingFile.name.split('.').pop() || '';
+        const safeName = customName.trim().replace(/[^a-zA-Z0-9\-_ ]/g, '');
+        const fileName = `${Date.now()}_${safeName}${ext ? '.' + ext : ''}`;
 
-        const { error } = await supabase.storage.from('sales_documents').upload(fileName, file, {
+        const { error } = await supabase.storage.from('sales_documents').upload(fileName, pendingFile, {
             cacheControl: '3600',
             upsert: false
         });
@@ -727,7 +762,13 @@ const DocumentsConfig: React.FC = () => {
             loadFiles();
         }
         setUploading(false);
-        e.target.value = ''; // Reset input
+        setPendingFile(null);
+        setCustomName('');
+    };
+
+    const cancelUpload = () => {
+        setPendingFile(null);
+        setCustomName('');
     };
 
     const handleDelete = async (fileName: string) => {
@@ -751,26 +792,54 @@ const DocumentsConfig: React.FC = () => {
                     Sube documentos (PDF, DOCX, imágenes) para que el equipo de ventas pueda descargarlos desde la sección principal.
                 </p>
 
-                <div style={{ padding: '2rem', border: '2px dashed var(--border-color)', borderRadius: '8px', width: '100%', textAlign: 'center', backgroundColor: 'var(--bg-color)' }}>
-                    <input
-                        type="file"
-                        id="doc-upload"
-                        style={{ display: 'none' }}
-                        onChange={handleUpload}
-                        disabled={uploading}
-                    />
-                    <label htmlFor="doc-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                        {uploading ? (
-                            <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary)' }} />
-                        ) : (
+                {!pendingFile ? (
+                    <div style={{ padding: '2rem', border: '2px dashed var(--border-color)', borderRadius: '8px', width: '100%', textAlign: 'center', backgroundColor: 'var(--bg-color)' }}>
+                        <input
+                            type="file"
+                            id="doc-upload"
+                            ref={fileInputRef}
+                            style={{ display: 'none' }}
+                            onChange={handleFileSelect}
+                            disabled={uploading}
+                        />
+                        <label htmlFor="doc-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                             <Upload size={32} style={{ color: 'var(--primary)' }} />
-                        )}
-                        <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>
-                            {uploading ? 'Subiendo archivo...' : 'Haz clic para subir un documento'}
-                        </span>
-                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Max 50MB (PDF, DOCX, etc.)</span>
-                    </label>
-                </div>
+                            <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>Haz clic para seleccionar un documento</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Max 50MB (PDF, DOCX, etc.)</span>
+                        </label>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem', border: '2px solid var(--primary)', borderRadius: '8px', width: '100%', backgroundColor: 'var(--bg-color)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <FileText size={24} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                            <span style={{ fontWeight: 500, color: 'var(--text-muted)', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pendingFile.name}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>Nombre que verán en la aplicación:</label>
+                            <input
+                                type="text"
+                                value={customName}
+                                onChange={e => setCustomName(e.target.value)}
+                                placeholder="Ej: Oferta Especial Verano"
+                                style={{ padding: '0.6rem 0.9rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.95rem', outline: 'none', width: '100%' }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button
+                                onClick={handleUpload}
+                                disabled={uploading || !customName.trim()}
+                                style={{ flex: 1, padding: '0.65rem', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            >
+                                {uploading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Subiendo...</> : <><Upload size={16} /> Subir Archivo</>}
+                            </button>
+                            <button
+                                onClick={cancelUpload}
+                                disabled={uploading}
+                                style={{ padding: '0.65rem 1.25rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'transparent', fontWeight: 600, cursor: 'pointer' }}
+                            >Cancelar</button>
+                        </div>
+                    </div>
+                )}
 
                 {msg && (
                     <div style={{ padding: '0.75rem 1rem', borderRadius: '6px', backgroundColor: msg.ok ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: msg.ok ? '#15803d' : '#b91c1c', width: '100%', fontWeight: 500 }}>

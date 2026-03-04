@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { getAsset, saveAssetsBatch } from '../lib/db';
 
 // Interfaces for our catalogs
 export interface Medication { id: string; name: string; dosage: string; frequency: string; duration: string; indications: string; }
@@ -7,6 +8,7 @@ export interface Lab { id: string; name: string; indications: string; }
 export interface ImagingStudy { id: string; name: string; reason: string; format: string; }
 export interface SurgeryTemplate { id: string; name: string; preText: string; postText: string; }
 export interface NutritionPhase { id: string; name: string; desc: string; }
+export interface KnowledgeItem { id: string; title: string; content: string; category: string; lastUpdated: string; }
 
 interface ConfigContextData {
     logoUrl?: string;
@@ -23,9 +25,11 @@ interface ConfigContextData {
     imaging: ImagingStudy[];
     surgeries: SurgeryTemplate[];
     nutrition: NutritionPhase[];
+    knowledgeBase: KnowledgeItem[];
     proposalIntro?: string;
     proposalPolicies?: string;
-    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies'>(catalog: T, items: any) => void;
+    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies'>(catalog: T, items: any) => void;
+    updateImagesBatch: (updates: { logo?: string; signature?: string; seal?: string }) => void;
 }
 
 const defaultMedications: Medication[] = [
@@ -81,6 +85,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [imaging, setImaging] = useState<ImagingStudy[]>(defaultImaging);
     const [surgeries, setSurgeries] = useState<SurgeryTemplate[]>(defaultSurgeries);
     const [nutrition, setNutrition] = useState<NutritionPhase[]>(defaultNutrition);
+    const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
     const [proposalIntro, setProposalIntro] = useState<string | undefined>('Estimada(o) {{paciente}}, es un placer para nosotros en 440 Clinic by Dr. Gio presentarte este presupuesto, diseñado exclusivamente para ti. Agradecemos la confianza que depositas en nuestro equipo para acompañarte en este importante camino hacia la perfecta armonía que deseas.');
     const [proposalPolicies, setProposalPolicies] = useState<string | undefined>('• El descuento por pronto pago se hace efectivo al realizar el abono inicial del 30% sobre el valor total de la cirugía. Este abono debe realizarse dentro de los 15 días posteriores a la fecha de emisión de esta cotización.\n• Dicho abono del 30% garantiza la reserva de su cupo y fecha quirúrgica, y a su vez congela el precio de los procedimientos cotizados por un período de seis (6) meses.');
     const [loaded, setLoaded] = useState(false);
@@ -90,6 +95,33 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, []);
 
     const loadConfig = async () => {
+        let localLogo, localSig, localSeal;
+
+        // 1. ALWAYS load images from IndexedDB first (our robust source of truth)
+        try {
+            const [dbLogo, dbSig, dbSeal] = await Promise.all([
+                getAsset('logoUrl'),
+                getAsset('signatureUrl'),
+                getAsset('sealUrl')
+            ]);
+
+            if (dbLogo) { setLogoUrl(dbLogo); localLogo = dbLogo; }
+            if (dbSig) { setSignatureUrl(dbSig); localSig = dbSig; }
+            if (dbSeal) { setSealUrl(dbSeal); localSeal = dbSeal; }
+        } catch (e) {
+            console.error('Failed to load images from IndexedDB', e);
+            // Fallback to legacy localStorage if available
+            const storedImages = localStorage.getItem('suiteMedicaImages');
+            if (storedImages) {
+                try {
+                    const parsedImages = JSON.parse(storedImages);
+                    if (parsedImages.logoUrl) { setLogoUrl(parsedImages.logoUrl); localLogo = parsedImages.logoUrl; }
+                    if (parsedImages.signatureUrl) { setSignatureUrl(parsedImages.signatureUrl); localSig = parsedImages.signatureUrl; }
+                    if (parsedImages.sealUrl) { setSealUrl(parsedImages.sealUrl); localSeal = parsedImages.sealUrl; }
+                } catch (e) { }
+            }
+        }
+
         try {
             const { data, error } = await supabase
                 .from('suite_config')
@@ -97,9 +129,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 .eq('id', 'main')
                 .single();
             if (!error && data) {
-                if (data.logo_url) setLogoUrl(data.logo_url);
-                if (data.signature_url) setSignatureUrl(data.signature_url);
-                if (data.seal_url) setSealUrl(data.seal_url);
+                // Only use Supabase values if NOT present in LocalStorage (local variables avoid closure bugs)
+                if (data.logo_url && !localLogo) setLogoUrl(data.logo_url);
+                if (data.signature_url && !localSig) setSignatureUrl(data.signature_url);
+                if (data.seal_url && !localSeal) setSealUrl(data.seal_url);
+
                 if (data.gmail_client_id) setGmailClientId(data.gmail_client_id);
                 if (data.doctor_name) setDoctorName(data.doctor_name);
                 if (data.rethus) setRethus(data.rethus);
@@ -111,6 +145,13 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (data.imaging?.length) setImaging(data.imaging);
                 if (data.surgeries?.length) setSurgeries(data.surgeries);
                 if (data.nutrition?.length) setNutrition(data.nutrition);
+                if (data.knowledge_base?.length) setKnowledgeBase(data.knowledge_base.map((k: any) => ({
+                    id: k.id,
+                    title: k.title,
+                    content: k.content,
+                    category: k.category,
+                    lastUpdated: k.updated_at
+                })));
                 if (data.proposal_intro) setProposalIntro(data.proposal_intro);
                 if (data.proposal_policies) setProposalPolicies(data.proposal_policies);
                 setLoaded(true);
@@ -143,23 +184,35 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setLoaded(true);
     };
 
+    // Save images to IndexedDB (base64 too large for Supabase columns)
+    const saveImagesToLocal = async (updates: { logoUrl?: string | undefined; signatureUrl?: string | undefined; sealUrl?: string | undefined }) => {
+        try {
+            const dbUpdates: Record<string, string | undefined> = {};
+            if (updates.logoUrl !== undefined) dbUpdates.logoUrl = updates.logoUrl;
+            if (updates.signatureUrl !== undefined) dbUpdates.signatureUrl = updates.signatureUrl;
+            if (updates.sealUrl !== undefined) dbUpdates.sealUrl = updates.sealUrl;
+
+            await saveAssetsBatch(dbUpdates);
+        } catch (e) { console.error('Failed to save images to IndexedDB', e); }
+    };
+
     const saveToSupabase = async (updates: Partial<{
-        logo_url: string | undefined; signature_url: string | undefined;
-        seal_url: string | undefined; gmail_client_id: string | undefined;
+        gmail_client_id: string | undefined;
         doctor_name: string | undefined; rethus: string | undefined;
         address: string | undefined; contact_phone: string | undefined;
         website_url: string | undefined;
         medications: Medication[]; labs: Lab[]; imaging: ImagingStudy[];
         surgeries: SurgeryTemplate[]; nutrition: NutritionPhase[];
+        knowledge_base: KnowledgeItem[];
         proposal_intro: string | undefined; proposal_policies: string | undefined;
     }>) => {
         await supabase.from('suite_config').upsert({
             id: 'main',
-            logo_url: logoUrl, signature_url: signatureUrl, seal_url: sealUrl,
             gmail_client_id: gmailClientId,
             doctor_name: doctorName, rethus, address, contact_phone: contactPhone,
             website_url: websiteUrl,
             medications, labs, imaging, surgeries, nutrition,
+            knowledge_base: knowledgeBase,
             proposal_intro: proposalIntro, proposal_policies: proposalPolicies,
             ...updates,
             updated_at: new Date().toISOString(),
@@ -167,22 +220,37 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const updateCatalog = (catalog: string, items: any) => {
-        if (catalog === 'logoUrl') { setLogoUrl(items); saveToSupabase({ logo_url: items }); }
-        if (catalog === 'signatureUrl') { setSignatureUrl(items); saveToSupabase({ signature_url: items }); }
-        if (catalog === 'sealUrl') { setSealUrl(items); saveToSupabase({ seal_url: items }); }
-        if (catalog === 'gmailClientId') { setGmailClientId(items); saveToSupabase({ gmail_client_id: items }); }
-        if (catalog === 'doctorName') { setDoctorName(items); saveToSupabase({ doctor_name: items }); }
-        if (catalog === 'rethus') { setRethus(items); saveToSupabase({ rethus: items }); }
-        if (catalog === 'address') { setAddress(items); saveToSupabase({ address: items }); }
-        if (catalog === 'contactPhone') { setContactPhone(items); saveToSupabase({ contact_phone: items }); }
-        if (catalog === 'websiteUrl') { setWebsiteUrl(items); saveToSupabase({ website_url: items }); }
-        if (catalog === 'medications') { setMedications(items); saveToSupabase({ medications: items }); }
-        if (catalog === 'labs') { setLabs(items); saveToSupabase({ labs: items }); }
-        if (catalog === 'imaging') { setImaging(items); saveToSupabase({ imaging: items }); }
-        if (catalog === 'surgeries') { setSurgeries(items); saveToSupabase({ surgeries: items }); }
-        if (catalog === 'nutrition') { setNutrition(items); saveToSupabase({ nutrition: items }); }
-        if (catalog === 'proposalIntro') { setProposalIntro(items); saveToSupabase({ proposal_intro: items }); }
-        if (catalog === 'proposalPolicies') { setProposalPolicies(items); saveToSupabase({ proposal_policies: items }); }
+        if (catalog === 'logoUrl') { setLogoUrl(items); saveImagesToLocal({ logoUrl: items }); }
+        else if (catalog === 'signatureUrl') { setSignatureUrl(items); saveImagesToLocal({ signatureUrl: items }); }
+        else if (catalog === 'sealUrl') { setSealUrl(items); saveImagesToLocal({ sealUrl: items }); }
+        else if (catalog === 'gmailClientId') { setGmailClientId(items); saveToSupabase({ gmail_client_id: items }); }
+        else if (catalog === 'doctorName') { setDoctorName(items); saveToSupabase({ doctor_name: items }); }
+        else if (catalog === 'rethus') { setRethus(items); saveToSupabase({ rethus: items }); }
+        else if (catalog === 'address') { setAddress(items); saveToSupabase({ address: items }); }
+        else if (catalog === 'contactPhone') { setContactPhone(items); saveToSupabase({ contact_phone: items }); }
+        else if (catalog === 'websiteUrl') { setWebsiteUrl(items); saveToSupabase({ website_url: items }); }
+        else if (catalog === 'medications') { setMedications(items); saveToSupabase({ medications: items }); }
+        else if (catalog === 'labs') { setLabs(items); saveToSupabase({ labs: items }); }
+        else if (catalog === 'imaging') { setImaging(items); saveToSupabase({ imaging: items }); }
+        else if (catalog === 'surgeries') { setSurgeries(items); saveToSupabase({ surgeries: items }); }
+        else if (catalog === 'nutrition') { setNutrition(items); saveToSupabase({ nutrition: items }); }
+        else if (catalog === 'knowledgeBase') {
+            setKnowledgeBase(items);
+            // Sync with knowledge_base table in Supabase is handled separately or via another mechanism for vectors
+            // But for persistence of the raw objects:
+            saveToSupabase({ knowledge_base: items });
+        }
+        else if (catalog === 'proposalIntro') { setProposalIntro(items); saveToSupabase({ proposal_intro: items }); }
+        else if (catalog === 'proposalPolicies') { setProposalPolicies(items); saveToSupabase({ proposal_policies: items }); }
+    };
+
+    // Bulk update for settings page optimization
+    const updateImagesBatch = (updates: { logo?: string; signature?: string; seal?: string }) => {
+        const lsUpdates: any = {};
+        if (updates.logo !== undefined) { setLogoUrl(updates.logo); lsUpdates.logoUrl = updates.logo; }
+        if (updates.signature !== undefined) { setSignatureUrl(updates.signature); lsUpdates.signatureUrl = updates.signature; }
+        if (updates.seal !== undefined) { setSealUrl(updates.seal); lsUpdates.sealUrl = updates.seal; }
+        saveImagesToLocal(lsUpdates);
     };
 
     if (!loaded) return null;
@@ -191,8 +259,8 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <ConfigContext.Provider value={{
             logoUrl, signatureUrl, sealUrl, gmailClientId,
             doctorName, rethus, address, contactPhone, websiteUrl,
-            medications, labs, imaging, surgeries, nutrition,
-            proposalIntro, proposalPolicies, updateCatalog
+            medications, labs, imaging, surgeries, nutrition, knowledgeBase,
+            proposalIntro, proposalPolicies, updateCatalog, updateImagesBatch
         }}>
             {children}
         </ConfigContext.Provider>

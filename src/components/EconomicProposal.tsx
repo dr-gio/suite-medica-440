@@ -341,7 +341,7 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
             </div>
 
             <div ref={printRef} className="print-budget-container print-only">
-                <PrintLayout patient={patient} title="PRESUPUESTO MÉDICO">
+                <PrintLayout patient={patient} title="PRESUPUESTO MÉDICO" hideSeal={true}>
                     <div style={{ color: '#1f2937', padding: '0 0.5rem' }}>
                         <div className="print-patient-info" style={{ marginTop: '0.2rem', borderTop: 'none' }}>
                             <div className="info-field"><span className="info-label">Ubicación</span><span className="info-value">{location}</span></div>
@@ -403,7 +403,7 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '3rem', paddingTop: '1.5rem', borderTop: '2px solid #f1f5f9' }}>
+                        <div style={{ marginTop: '5rem', paddingTop: '1.5rem', borderTop: '2px solid #f1f5f9' }}>
                             <h4 style={{ fontSize: '9pt', fontWeight: 700, color: '#334155', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Políticas Comerciales</h4>
                             <p style={{ fontSize: '8.5pt', color: '#64748b', whiteSpace: 'pre-wrap', lineHeight: '1.7', textAlign: 'justify' }}>{proposalPolicies}</p>
                         </div>

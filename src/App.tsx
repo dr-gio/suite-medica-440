@@ -14,6 +14,7 @@ import Referral from './components/Referral';
 import Settings from './components/Settings';
 import EconomicProposal from './components/EconomicProposal';
 import SalesTools from './components/SalesTools';
+import AIChat from './components/AIChat';
 
 import { useConfig } from './context/ConfigContext';
 
@@ -221,6 +222,19 @@ function App() {
           onClose={() => setShowShare(false)}
         />
       )}
+
+      {/* AI Assistant Chat */}
+      <AIChat />
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }

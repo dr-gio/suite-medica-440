@@ -5,9 +5,10 @@ interface PrintLayoutProps {
     title: string;
     patient: any;
     children: React.ReactNode;
+    hideSeal?: boolean;
 }
 
-const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) => {
+const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children, hideSeal }) => {
     const { logoUrl, signatureUrl, sealUrl, doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
 
     return (
@@ -63,8 +64,8 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children }) =
                     )}
 
                     <div className="signature-line" style={{ borderTop: '1px solid #1f2937', width: '220px', paddingTop: '0.3rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>
-                        {sealUrl && (
-                            <img src={sealUrl} alt="Sello" crossOrigin="anonymous" style={{ position: 'absolute', right: '-60px', bottom: '0px', width: '90px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
+                        {sealUrl && !hideSeal && (
+                            <img src={sealUrl} alt="Sello" crossOrigin="anonymous" style={{ position: 'absolute', right: '-110px', bottom: '-18px', width: '200px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
                         )}
                         <p style={{ fontWeight: 700, color: '#111827', fontSize: '9pt', margin: 0 }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
                         <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>Cirujano Plástico Estético y Reconstructivo</p>
