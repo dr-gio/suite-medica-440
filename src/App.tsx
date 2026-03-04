@@ -21,7 +21,7 @@ import { useConfig } from './context/ConfigContext';
 function App() {
   const { logoUrl } = useConfig();
   const { locked, lock } = useAutoLock();
-  // Deployment trigger: Integrated AI Clinical Knowledge Base and Assistant
+  // Deployment trigger: Verified author drgio@440clinic.com
   const [activeTab, setActiveTab] = useState('prescriptions');
   const [showShare, setShowShare] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
