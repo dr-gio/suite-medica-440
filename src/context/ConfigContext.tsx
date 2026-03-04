@@ -9,6 +9,7 @@ export interface ImagingStudy { id: string; name: string; reason: string; format
 export interface SurgeryTemplate { id: string; name: string; preText: string; postText: string; }
 export interface NutritionPhase { id: string; name: string; desc: string; }
 export interface KnowledgeItem { id: string; title: string; content: string; category: string; lastUpdated: string; }
+export interface ConsentTemplate { id: string; name: string; content: string; }
 
 interface ConfigContextData {
     logoUrl?: string;
@@ -25,10 +26,11 @@ interface ConfigContextData {
     imaging: ImagingStudy[];
     surgeries: SurgeryTemplate[];
     nutrition: NutritionPhase[];
+    consentTemplates: ConsentTemplate[];
     knowledgeBase: KnowledgeItem[];
     proposalIntro?: string;
     proposalPolicies?: string;
-    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies'>(catalog: T, items: any) => void;
+    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies' | 'consentTemplates'>(catalog: T, items: any) => void;
     updateImagesBatch: (updates: { logo?: string; signature?: string; seal?: string }) => void;
 }
 
@@ -68,6 +70,17 @@ const defaultNutrition: NutritionPhase[] = [
     { id: '3', name: 'Fase 3: Dieta en Puré / Pastosa (Semanas 3 y 4)', desc: 'Alimentos licuados o aplastados. Puré de papas, zanahorias, pollo muy cocido y desmenuzado, pescados blancos, huevos revueltos suaves.' }
 ];
 
+const defaultConsents: ConsentTemplate[] = [
+    {
+        id: '1', name: 'Lipoescultura / Liposucción',
+        content: 'Por medio del presente documento, yo declaro que he sido informado de manera clara y detallada sobre el procedimiento de Lipoescultura. Entiendo que el objetivo es la remodelación del contorno corporal mediante la extracción de depósitos grasos localizados. Se me ha explicado la técnica a utilizar, el tipo de anestesia y el tiempo estimado de recuperación.\n\nRIESGOS Y COMPLICACIONES:\nLos riesgos discutidos incluyen, pero no se limitan a: irregularidades en el contorno, asimetrías, cambios en la sensibilidad cutánea, hematomas, seromas, infección, tromboembolismo pulmonar y riesgos asociados a la anestesia.'
+    },
+    {
+        id: '2', name: 'Mamoplastia de Aumento',
+        content: 'Entiendo que el procedimiento consiste en la colocación de implantes mamarios para mejorar el volumen y la forma de los senos. He discutido con el Dr. Gio el tipo de implante, el tamaño, la ubicación (detrás o delante del músculo) y el tipo de incisión a realizar.\n\nRIESGOS Y COMPLICACIONES:\nEntiendo los riesgos específicos como: contractura capsular, rotura del implante, interferencia con la lactancia o mamografía, asimetría, cicatrización hipertrófica y necesidad de cirugías futuras de revisión.'
+    }
+];
+
 const ConfigContext = createContext<ConfigContextData | undefined>(undefined);
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -85,6 +98,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [imaging, setImaging] = useState<ImagingStudy[]>(defaultImaging);
     const [surgeries, setSurgeries] = useState<SurgeryTemplate[]>(defaultSurgeries);
     const [nutrition, setNutrition] = useState<NutritionPhase[]>(defaultNutrition);
+    const [consentTemplates, setConsentTemplates] = useState<ConsentTemplate[]>(defaultConsents);
     const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
     const [proposalIntro, setProposalIntro] = useState<string | undefined>('Estimada(o) {{paciente}}, es un placer para nosotros en 440 Clinic by Dr. Gio presentarte este presupuesto, diseñado exclusivamente para ti. Agradecemos la confianza que depositas en nuestro equipo para acompañarte en este importante camino hacia la perfecta armonía que deseas.');
     const [proposalPolicies, setProposalPolicies] = useState<string | undefined>('• El descuento por pronto pago se hace efectivo al realizar el abono inicial del 30% sobre el valor total de la cirugía. Este abono debe realizarse dentro de los 15 días posteriores a la fecha de emisión de esta cotización.\n• Dicho abono del 30% garantiza la reserva de su cupo y fecha quirúrgica, y a su vez congela el precio de los procedimientos cotizados por un período de seis (6) meses.');
@@ -141,6 +155,13 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (data.imaging?.length) setImaging(data.imaging);
                 if (data.surgeries?.length) setSurgeries(data.surgeries);
                 if (data.nutrition?.length) setNutrition(data.nutrition);
+                if (data.consent_templates?.length) {
+                    setConsentTemplates(data.consent_templates.map((t: any) => ({
+                        id: t.id || Math.random().toString(),
+                        name: t.name || '',
+                        content: t.content + (t.risks ? `\n\nRIESGOS Y COMPLICACIONES:\n${t.risks}` : '')
+                    })));
+                }
                 if (data.knowledge_base?.length) setKnowledgeBase(data.knowledge_base.map((k: any) => ({
                     id: k.id,
                     title: k.title,
@@ -173,6 +194,13 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (parsed.imaging) setImaging(parsed.imaging);
                 if (parsed.surgeries) setSurgeries(parsed.surgeries);
                 if (parsed.nutrition) setNutrition(parsed.nutrition);
+                if (parsed.consentTemplates) {
+                    setConsentTemplates(parsed.consentTemplates.map((t: any) => ({
+                        id: t.id || Math.random().toString(),
+                        name: t.name || '',
+                        content: t.content + (t.risks ? `\n\nRIESGOS Y COMPLICACIONES:\n${t.risks}` : '')
+                    })));
+                }
                 if (parsed.proposalIntro) setProposalIntro(parsed.proposalIntro);
                 if (parsed.proposalPolicies) setProposalPolicies(parsed.proposalPolicies);
             } catch (e) { console.error('Failed to load configs', e); }
@@ -203,6 +231,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         website_url: string | undefined;
         medications: Medication[]; labs: Lab[]; imaging: ImagingStudy[];
         surgeries: SurgeryTemplate[]; nutrition: NutritionPhase[];
+        consent_templates: ConsentTemplate[];
         knowledge_base: KnowledgeItem[];
         proposal_intro: string | undefined; proposal_policies: string | undefined;
     }>) => {
@@ -212,6 +241,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             doctor_name: doctorName, rethus, address, contact_phone: contactPhone,
             website_url: websiteUrl,
             medications, labs, imaging, surgeries, nutrition,
+            consent_templates: consentTemplates,
             knowledge_base: knowledgeBase,
             proposal_intro: proposalIntro, proposal_policies: proposalPolicies,
             ...updates,
@@ -234,6 +264,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         else if (catalog === 'imaging') { setImaging(items); saveToSupabase({ imaging: items }); }
         else if (catalog === 'surgeries') { setSurgeries(items); saveToSupabase({ surgeries: items }); }
         else if (catalog === 'nutrition') { setNutrition(items); saveToSupabase({ nutrition: items }); }
+        else if (catalog === 'consentTemplates') { setConsentTemplates(items); saveToSupabase({ consent_templates: items }); }
         else if (catalog === 'knowledgeBase') {
             setKnowledgeBase(items);
             // Sync with knowledge_base table in Supabase is handled separately or via another mechanism for vectors
@@ -259,7 +290,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <ConfigContext.Provider value={{
             logoUrl, signatureUrl, sealUrl, gmailClientId,
             doctorName, rethus, address, contactPhone, websiteUrl,
-            medications, labs, imaging, surgeries, nutrition, knowledgeBase,
+            medications, labs, imaging, surgeries, nutrition, consentTemplates, knowledgeBase,
             proposalIntro, proposalPolicies, updateCatalog, updateImagesBatch
         }}>
             {children}

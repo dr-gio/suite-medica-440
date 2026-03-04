@@ -121,8 +121,8 @@ const AIChat: React.FC = () => {
             {isOpen && (
                 <div style={{
                     width: '380px', height: '550px',
-                    background: 'white', borderRadius: '20px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                    background: 'var(--surface)', borderRadius: '20px',
+                    boxShadow: 'var(--glass-shadow)',
                     display: 'flex', flexDirection: 'column', overflow: 'hidden',
                     border: '1px solid var(--border-color)'
                 }}>
@@ -146,7 +146,7 @@ const AIChat: React.FC = () => {
                     </div>
 
                     {/* Messages Area */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: '#f8fafc' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--bg-color)' }}>
                         {messages.map(msg => (
                             <div key={msg.id} style={{
                                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
@@ -155,11 +155,11 @@ const AIChat: React.FC = () => {
                             }}>
                                 <div style={{
                                     padding: '0.75rem 1rem', borderRadius: '15px',
-                                    background: msg.role === 'user' ? 'var(--primary)' : 'white',
+                                    background: msg.role === 'user' ? 'var(--primary)' : 'var(--surface)',
                                     color: msg.role === 'user' ? 'white' : 'var(--text-main)',
                                     boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
                                     fontSize: '0.9rem', lineHeight: '1.4',
-                                    border: msg.role === 'assistant' ? '1px solid #e2e8f0' : 'none'
+                                    border: '1px solid var(--border-color)'
                                 }}>
                                     {msg.content.split('\n').map((line, i) => <div key={i}>{line}</div>)}
                                 </div>
@@ -169,7 +169,7 @@ const AIChat: React.FC = () => {
                             </div>
                         ))}
                         {isLoading && (
-                            <div style={{ alignSelf: 'flex-start', background: 'white', padding: '0.75rem 1rem', borderRadius: '15px', border: '1px solid #e2e8f0', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+                            <div style={{ alignSelf: 'flex-start', background: 'var(--surface)', padding: '0.75rem 1rem', borderRadius: '15px', border: '1px solid var(--border-color)', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
                                 <Loader2 size={16} className="animate-spin" style={{ color: 'var(--primary)' }} />
                             </div>
                         )}
@@ -178,12 +178,12 @@ const AIChat: React.FC = () => {
 
                     {/* Quick suggestions */}
                     {messages.length === 1 && (
-                        <div style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', background: '#f8fafc' }}>
+                        <div style={{ padding: '0.5rem 1rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', background: 'var(--bg-color)' }}>
                             {['Lipo', 'Renuvion', 'Post-operatorio'].map(tip => (
                                 <button
                                     key={tip}
                                     onClick={() => setInput(tip)}
-                                    style={{ padding: '0.3rem 0.8rem', borderRadius: '15px', background: 'white', border: '1px solid #e2e8f0', fontSize: '0.75rem', color: 'var(--primary)', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                                    style={{ padding: '0.3rem 0.8rem', borderRadius: '15px', background: 'var(--surface)', border: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--primary)', whiteSpace: 'nowrap', cursor: 'pointer' }}
                                 >
                                     {tip}
                                 </button>
@@ -196,7 +196,8 @@ const AIChat: React.FC = () => {
                         <input
                             style={{
                                 flex: 1, border: '1px solid var(--border-color)', borderRadius: '10px',
-                                padding: '0.75rem', outline: 'none', fontSize: '0.9rem'
+                                padding: '0.75rem', outline: 'none', fontSize: '0.9rem',
+                                background: 'var(--bg-color)', color: 'var(--text-main)'
                             }}
                             placeholder="Pregúntale a la IA..."
                             value={input}

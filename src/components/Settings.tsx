@@ -19,6 +19,7 @@ const Settings: React.FC = () => {
         { id: 'documents', label: 'Archivos de Venta' },
         { id: 'services', label: '💰 Catálogo Servicios' },
         { id: 'proposal', label: '📄 Textos Presupuesto' },
+        { id: 'consent-templates', label: '📝 Consentimientos' },
         { id: 'ai-knowledge', label: '🧠 Base de IA' },
     ];
 
@@ -44,6 +45,8 @@ const Settings: React.FC = () => {
                 return <ServicesConfig />;
             case 'proposal':
                 return <ProposalConfig />;
+            case 'consent-templates':
+                return <ConsentConfig />;
             case 'ai-knowledge':
                 return <KnowledgeBaseEditor />;
             default:
@@ -799,43 +802,23 @@ const DocumentsConfig: React.FC = () => {
                             ref={fileInputRef}
                             style={{ display: 'none' }}
                             onChange={handleFileSelect}
-                            disabled={uploading}
                         />
-                        <label htmlFor="doc-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                            <Upload size={32} style={{ color: 'var(--primary)' }} />
-                            <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>Haz clic para seleccionar un documento</span>
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Max 50MB (PDF, DOCX, etc.)</span>
-                        </label>
+                        <button className="action-btn" onClick={() => fileInputRef.current?.click()}>
+                            <Upload size={20} /> Seleccionar Archivo para Subir
+                        </button>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem', border: '2px solid var(--primary)', borderRadius: '8px', width: '100%', backgroundColor: 'var(--bg-color)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <FileText size={24} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                            <span style={{ fontWeight: 500, color: 'var(--text-muted)', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pendingFile.name}</span>
+                    <div className="item-card" style={{ width: '100%', background: 'var(--bg-color)', border: '1px solid var(--primary)' }}>
+                        <div style={{ flex: 1 }}>
+                            <label className="form-label">Nombre del Documento (Cómo lo verá el equipo)</label>
+                            <input className="form-input" value={customName} onChange={e => setCustomName(e.target.value)} />
+                            <p style={{ fontSize: '0.8rem', marginTop: '0.4rem', color: 'var(--text-muted)' }}>Archivo: {pendingFile.name}</p>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                            <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>Nombre que verán en la aplicación:</label>
-                            <input
-                                type="text"
-                                value={customName}
-                                onChange={e => setCustomName(e.target.value)}
-                                placeholder="Ej: Oferta Especial Verano"
-                                style={{ padding: '0.6rem 0.9rem', borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.95rem', outline: 'none', width: '100%' }}
-                            />
-                        </div>
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <button
-                                onClick={handleUpload}
-                                disabled={uploading || !customName.trim()}
-                                style={{ flex: 1, padding: '0.65rem', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            >
-                                {uploading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Subiendo...</> : <><Upload size={16} /> Subir Archivo</>}
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button className="action-btn primary" onClick={handleUpload} disabled={uploading}>
+                                {uploading ? <Loader2 size={18} className="spin" /> : <Save size={18} />} Guardar
                             </button>
-                            <button
-                                onClick={cancelUpload}
-                                disabled={uploading}
-                                style={{ padding: '0.65rem 1.25rem', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'transparent', fontWeight: 600, cursor: 'pointer' }}
-                            >Cancelar</button>
+                            <button className="action-btn" onClick={cancelUpload}>Cancelar</button>
                         </div>
                     </div>
                 )}
@@ -845,33 +828,72 @@ const DocumentsConfig: React.FC = () => {
                         {msg.text}
                     </div>
                 )}
-            </div>
-
-            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
-                <h4 style={{ margin: 0, color: 'var(--primary)' }}>Documentos Subidos ({files.length})</h4>
 
                 {loading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
-                        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Cargando...
-                    </div>
-                ) : files.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>No hay documentos subidos actualmente.</p>
+                    <p>Cargando archivos...</p>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         {files.map(f => (
-                            <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', border: '1px solid var(--border-color)', borderRadius: '6px', backgroundColor: 'white' }}>
-                                <FileText size={20} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                                <div style={{ flex: 1, overflow: 'hidden' }}>
-                                    <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name.replace(/^\d+_/, '')}</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{f.metadata?.size ? (f.metadata.size / 1024 / 1024).toFixed(2) : 0} MB</div>
-                                </div>
-                                <button className="remove-btn" onClick={() => handleDelete(f.name)} title="Eliminar documento">
-                                    <Trash2 size={18} />
-                                </button>
+                            <div key={f.name} className="item-card">
+                                <FileText size={20} color="var(--primary)" />
+                                <span style={{ flex: 1, fontWeight: 500 }}>{f.name.split('_').slice(1).join('_')}</span>
+                                <button className="remove-btn" onClick={() => handleDelete(f.name)}><Trash2 size={16} /></button>
                             </div>
                         ))}
                     </div>
                 )}
+            </div>
+        </div>
+    );
+};
+
+const ConsentConfig: React.FC = () => {
+    const { consentTemplates, updateCatalog } = useConfig();
+    const [items, setItems] = useState(consentTemplates);
+
+    const addItem = () => setItems([...items, { id: Date.now().toString(), name: '', content: '' }]);
+    const updateItem = (index: number, field: string, val: string) => {
+        const newItems = [...items];
+        newItems[index] = { ...newItems[index], [field]: val };
+        setItems(newItems);
+    };
+    const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+    const handleSave = () => updateCatalog('consentTemplates', items);
+
+    return (
+        <div>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    Define las plantillas de consentimiento para los diferentes procedimientos quirúrgicos.
+                </p>
+            </div>
+            {items.map((m, i) => (
+                <div key={m.id} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <input
+                            className="form-input"
+                            style={{ flex: 1, fontWeight: 'bold' }}
+                            placeholder="Nombre del Procedimiento (ej: Lipoescultura)"
+                            value={m.name}
+                            onChange={(e) => updateItem(i, 'name', e.target.value)}
+                        />
+                        <button className="remove-btn" onClick={() => removeItem(i)}><X size={18} /></button>
+                    </div>
+                    <div>
+                        <label className="form-label" style={{ fontSize: '0.85rem' }}>Texto Completo del Consentimiento (Incluyendo Riesgos)</label>
+                        <textarea
+                            className="form-input"
+                            style={{ minHeight: '220px' }}
+                            placeholder="Redacta aquí todo el texto del consentimiento, incluyendo los riesgos..."
+                            value={m.content}
+                            onChange={(e) => updateItem(i, 'content', e.target.value)}
+                        />
+                    </div>
+                </div>
+            ))}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Nueva Plantilla</button>
+                <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Consentimientos</button>
             </div>
         </div>
     );

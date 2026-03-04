@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './App.css';
-import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet, FolderOpen } from 'lucide-react';
+import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet, FolderOpen, FileText } from 'lucide-react';
 import PinLock, { useAutoLock } from './components/PinLock';
 import SharePanel from './components/SharePanel';
 import Prescriptions from './components/Prescriptions';
@@ -15,6 +15,7 @@ import Settings from './components/Settings';
 import EconomicProposal from './components/EconomicProposal';
 import SalesTools from './components/SalesTools';
 import AIChat from './components/AIChat';
+import InformedConsent from './components/InformedConsent';
 
 import { useConfig } from './context/ConfigContext';
 
@@ -43,8 +44,9 @@ function App() {
     { id: 'labs', label: 'Laboratorios', icon: <TestTube size={20} /> },
     { id: 'imaging', label: 'Imágenes', icon: <ActivitySquare size={20} /> },
     { id: 'surgery', label: 'Rec. Quirúrgicas', icon: <ClipboardList size={20} /> },
-    { id: 'nutrition', label: 'Nutrición', icon: <Utensils size={20} /> },
-    { id: 'sickleave', label: 'Incapacidades', icon: <CalendarClock size={20} /> },
+    { id: 'nutrition', label: 'Plan Nutrición', icon: <Utensils size={20} /> },
+    { id: 'consent', label: 'Consentimientos', icon: <FileText size={20} /> },
+    { id: 'sickleave', label: 'Incapacidad', icon: <CalendarClock size={20} /> },
     { id: 'travel', label: 'Cert. Viaje', icon: <Plane size={20} /> },
     { id: 'referral', label: 'Remisiones', icon: <Send size={20} /> },
     { id: 'proposal', label: 'Presupuesto', icon: <Wallet size={20} /> },
@@ -64,6 +66,8 @@ function App() {
         return <SurgeryRecommendations patient={patient} />;
       case 'nutrition':
         return <NutritionPhases patient={patient} />;
+      case 'consent':
+        return <InformedConsent patient={patient} />;
       case 'sickleave':
         return <SickLeave patient={patient} />;
       case 'travel':
