@@ -9,13 +9,14 @@ interface Props {
 }
 
 const InformedConsent: React.FC<Props> = ({ patient }) => {
-    const { consentTemplates, doctorName, rethus } = useConfig();
+    const { consentTemplates, doctorName } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [content, setContent] = useState('');
     const [procedureName, setProcedureName] = useState('');
     const [surgeryDate, setSurgeryDate] = useState(new Date().toISOString().split('T')[0]);
+    const [signingDate, setSigningDate] = useState(new Date().toISOString().split('T')[0]);
 
     // Load template when selected
     useEffect(() => {
@@ -82,6 +83,15 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                             onChange={(e) => setSurgeryDate(e.target.value)}
                         />
                     </div>
+                    <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Fecha de Firma</label>
+                        <input
+                            type="date"
+                            className="form-input"
+                            value={signingDate}
+                            onChange={(e) => setSigningDate(e.target.value)}
+                        />
+                    </div>
                 </div>
 
                 <div className="form-group">
@@ -99,43 +109,38 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
             <div ref={printRef} className="print-only">
                 <PrintLayout patient={patient} title={`CONSENTIMIENTO INFORMADO: ${procedureName.toUpperCase() || 'PROCEDIMIENTO'}`}>
                     <div style={{ lineHeight: '1.6', marginTop: '1rem', color: '#1f2937', fontSize: '10.5pt', textAlign: 'justify' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                             <div>
                                 <strong>PACIENTE:</strong> {patient.name}<br />
-                                <strong>DOCUMENTO:</strong> {patient.id}<br />
-                                <strong>EDAD:</strong> {patient.age} años
+                                <strong>DOCUMENTO:</strong> {patient.id}
                             </div>
                             <div>
                                 <strong>FECHA CIRUGÍA:</strong> {surgeryDate}<br />
-                                <strong>MÉDICO TRATANTE:</strong> {doctorName}<br />
-                                <strong>INSTITUCIÓN:</strong> 440 Clinic
+                                <strong>EDAD:</strong> {patient.age} años
+                            </div>
+                            <div>
+                                <strong>FECHA FIRMA:</strong> {signingDate}<br />
+                                <strong>MÉDICO:</strong> {doctorName}
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem', minHeight: '400px' }}>
+                        <div style={{ marginBottom: '2rem', minHeight: '450px' }}>
                             <p style={{ whiteSpace: 'pre-wrap' }}>{content || '__________________________________________________________________________________________________'}</p>
                         </div>
 
-                        <p style={{ fontSize: '9pt', color: '#4b5563', fontStyle: 'italic', marginTop: '1.5rem' }}>
-                            Declaro que he sido informado de las alternativas al tratamiento, así como de las posibles consecuencias de no realizarlo.
-                            He tenido la oportunidad de realizar todas las preguntas que he considerado necesarias y todas ellas han sido contestadas a mi entera satisfacción.
-                            Comprendo que en medicina no se pueden garantizar resultados exactos al 100%.
+                        <p style={{ fontSize: '10pt', color: '#1f2937', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                            El presente consentimiento se firma el día <strong>{signingDate}</strong> en señal de aceptación en pleno conocimiento y facultades cognitivas.
                         </p>
 
-                        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'space-between', gap: '2rem' }}>
-                            <div style={{ flex: 1, borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
+                        <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '5rem' }}>
+                            <div style={{ width: '220px', borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
                                 <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: '0' }}>FIRMA DEL PACIENTE</p>
                                 <p style={{ fontSize: '8.5pt', margin: '0.25rem 0' }}>C.C. {patient.id}</p>
-                                <div style={{ height: '50px', width: '50px', border: '1px solid #000', margin: '0.5rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7pt' }}>
+                                <div style={{ height: '60px', width: '60px', border: '1px solid #000', margin: '0.5rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7pt' }}>
                                     HUELLA
                                 </div>
                             </div>
-                            <div style={{ flex: 1, borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
-                                <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: '0' }}>FIRMA MÉDICO TRATANTE</p>
-                                <p style={{ fontSize: '8.5pt', margin: '0.25rem 0' }}>{doctorName}</p>
-                                <p style={{ fontSize: '8pt', color: '#64748b' }}>Reg. Med: {rethus}</p>
-                            </div>
-                            <div style={{ flex: 1, borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
+                            <div style={{ width: '220px', borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
                                 <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: '0' }}>FIRMA TESTIGO (SI LO HAY)</p>
                                 <p style={{ fontSize: '8.5pt', margin: '0.25rem 0' }}>C.C. ___________________</p>
                             </div>
