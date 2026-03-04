@@ -90,10 +90,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [proposalPolicies, setProposalPolicies] = useState<string | undefined>('• El descuento por pronto pago se hace efectivo al realizar el abono inicial del 30% sobre el valor total de la cirugía. Este abono debe realizarse dentro de los 15 días posteriores a la fecha de emisión de esta cotización.\n• Dicho abono del 30% garantiza la reserva de su cupo y fecha quirúrgica, y a su vez congela el precio de los procedimientos cotizados por un período de seis (6) meses.');
     const [loaded, setLoaded] = useState(false);
 
-    useEffect(() => {
-        loadConfig();
-    }, []);
-
     const loadConfig = async () => {
         let localLogo, localSig, localSeal;
 
@@ -183,6 +179,10 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         setLoaded(true);
     };
+
+    useEffect(() => {
+        loadConfig();
+    }, []);
 
     // Save images to IndexedDB (base64 too large for Supabase columns)
     const saveImagesToLocal = async (updates: { logoUrl?: string | undefined; signatureUrl?: string | undefined; sealUrl?: string | undefined }) => {

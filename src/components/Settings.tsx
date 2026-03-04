@@ -90,7 +90,7 @@ const Settings: React.FC = () => {
 
 // Config Components for each Catalog
 const GeneralConfig: React.FC = () => {
-    const { logoUrl, signatureUrl, sealUrl, gmailClientId, updateCatalog } = useConfig();
+    const { logoUrl, signatureUrl, sealUrl, gmailClientId, updateCatalog, updateImagesBatch } = useConfig() as any;
     const [logo, setLogo] = useState<string | undefined>(logoUrl);
     const [signature, setSignature] = useState<string | undefined>(signatureUrl);
     const [seal, setSeal] = useState<string | undefined>(sealUrl);
@@ -116,7 +116,6 @@ const GeneralConfig: React.FC = () => {
 
     const handleSave = () => {
         // Use batch update to avoid multiple localStorage writes/reads and state race conditions
-        const { updateImagesBatch } = useConfig() as any; // Cast if interface not updated yet, but I updated it
         if (updateImagesBatch) {
             updateImagesBatch({ logo, signature, seal });
         } else {
