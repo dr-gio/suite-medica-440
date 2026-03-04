@@ -33,17 +33,16 @@ serve(async (req) => {
 
         if (searchError) throw searchError
 
-        // 4. Build Prompt with Context
-        const context = documents?.map((d: any) => `Título: ${d.title}\nContenido: ${d.content}`).join('\n\n')
-
-        // 5. Call LLM (Example: OpenAI or Gemini via fetch)
-        // For this implementation, we return the context found as a structured response
-        // if the LLM key isn't configured yet in the environment.
+        // 4. Build Moderate Length Response
+        const bestMatch = documents?.[0]
+        const answer = bestMatch
+            ? `${bestMatch.title.toUpperCase()}:\n${bestMatch.content.substring(0, 1200)}${bestMatch.content.length > 1200 ? '...' : ''}`
+            : "No encontré información específica."
 
         return new Response(
             JSON.stringify({
-                answer: context ? `Basado en mis registros:\n\n${context}` : "No encontré información específica en la base de datos.",
-                sources: documents
+                answer: answer,
+                sources: documents?.slice(0, 1)
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )

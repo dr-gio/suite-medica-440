@@ -167,7 +167,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     title: k.title,
                     content: k.content,
                     category: k.category,
-                    lastUpdated: k.updated_at
+                    lastUpdated: k.lastUpdated || k.updated_at || new Date().toISOString()
                 })));
                 if (data.proposal_intro) setProposalIntro(data.proposal_intro);
                 if (data.proposal_policies) setProposalPolicies(data.proposal_policies);

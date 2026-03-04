@@ -79,7 +79,6 @@ const AIChat: React.FC = () => {
     const simulateAIResponse = (query: string, data: any[]): string => {
         const lowerQuery = query.toLowerCase();
 
-        // Find relevant items
         const relevantItems = data.filter(item =>
             item.title.toLowerCase().includes(lowerQuery) ||
             item.content.toLowerCase().split(' ').some((word: string) => word.length > 4 && lowerQuery.includes(word.toLowerCase()))
@@ -87,10 +86,11 @@ const AIChat: React.FC = () => {
 
         if (relevantItems.length > 0) {
             const bestMatch = relevantItems[0];
-            return `Basado en el protocolo de "${bestMatch.title}":\n\n${bestMatch.content}\n\n¿Necesitas más detalles sobre esto?`;
+            // Increase to 1200 characters to cover more detail (roughly 20-25 lines)
+            return `${bestMatch.title.toUpperCase()}:\n${bestMatch.content.substring(0, 1200)}${bestMatch.content.length > 1200 ? '...' : ''}`;
         }
 
-        return "Lo siento, no encontré información específica sobre eso en mi base de datos actual. ¿Podrías ser más específico o verificar si el protocolo está cargado en Configuración?";
+        return "No encontré información específica.";
     };
 
     return (
