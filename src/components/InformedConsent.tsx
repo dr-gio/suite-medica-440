@@ -107,12 +107,27 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
             </div>
 
             <div ref={printRef} className="print-only">
-                <PrintLayout patient={patient} title={`CONSENTIMIENTO INFORMADO: ${procedureName.toUpperCase() || 'PROCEDIMIENTO'}`}>
-                    <div style={{ lineHeight: '1.6', marginTop: '1rem', color: '#1f2937', fontSize: '10.5pt', textAlign: 'justify' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <PrintLayout
+                    patient={patient}
+                    title={`CONSENTIMIENTO INFORMADO: ${procedureName.toUpperCase() || 'PROCEDIMIENTO'}`}
+                    hidePatientInfo={true}
+                    hideFooter={true}
+                >
+                    <div style={{ lineHeight: '1.6', marginTop: '0.5rem', color: '#1f2937', fontSize: '10.5pt', textAlign: 'justify' }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1.2fr 1fr 1fr',
+                            gap: '0.75rem',
+                            marginBottom: '1rem',
+                            background: '#f8fafc',
+                            padding: '0.8rem',
+                            borderRadius: '6px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '9.5pt'
+                        }}>
                             <div>
                                 <strong>PACIENTE:</strong> {patient.name}<br />
-                                <strong>DOCUMENTO:</strong> {patient.id}
+                                <strong>CC / ID:</strong> {patient.id}
                             </div>
                             <div>
                                 <strong>FECHA CIRUGÍA:</strong> {surgeryDate}<br />
@@ -124,25 +139,25 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: '2rem', minHeight: '450px' }}>
-                            <p style={{ whiteSpace: 'pre-wrap' }}>{content || '__________________________________________________________________________________________________'}</p>
+                        <div style={{ marginBottom: '1rem' }}>
+                            <p style={{ whiteSpace: 'pre-wrap', minHeight: '300px' }}>{content || '__________________________________________________________________________________________________'}</p>
                         </div>
 
-                        <p style={{ fontSize: '10pt', color: '#1f2937', marginTop: '2rem', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
+                        <p style={{ fontSize: '10pt', color: '#1f2937', marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '0.8rem' }}>
                             El presente consentimiento se firma el día <strong>{signingDate}</strong> en señal de aceptación en pleno conocimiento y facultades cognitivas.
                         </p>
 
-                        <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '5rem' }}>
-                            <div style={{ width: '220px', borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
-                                <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: '0' }}>FIRMA DEL PACIENTE</p>
-                                <p style={{ fontSize: '8.5pt', margin: '0.25rem 0' }}>C.C. {patient.id}</p>
-                                <div style={{ height: '60px', width: '60px', border: '1px solid #000', margin: '0.5rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7pt' }}>
+                        <div style={{ marginTop: '2.5rem', display: 'flex', justifyContent: 'center', gap: '4rem' }}>
+                            <div style={{ width: '200px', borderTop: '1px solid #000', paddingTop: '0.4rem', textAlign: 'center' }}>
+                                <p style={{ fontSize: '8.5pt', fontWeight: 'bold', margin: '0' }}>FIRMA DEL PACIENTE</p>
+                                <p style={{ fontSize: '8pt', margin: '0.2rem 0' }}>C.C. {patient.id}</p>
+                                <div style={{ height: '55px', width: '55px', border: '1px solid #000', margin: '0.4rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '6.5pt' }}>
                                     HUELLA
                                 </div>
                             </div>
-                            <div style={{ width: '220px', borderTop: '1px solid #000', paddingTop: '0.5rem', textAlign: 'center' }}>
-                                <p style={{ fontSize: '9pt', fontWeight: 'bold', margin: '0' }}>FIRMA TESTIGO (SI LO HAY)</p>
-                                <p style={{ fontSize: '8.5pt', margin: '0.25rem 0' }}>C.C. ___________________</p>
+                            <div style={{ width: '200px', borderTop: '1px solid #000', paddingTop: '0.4rem', textAlign: 'center' }}>
+                                <p style={{ fontSize: '8.5pt', fontWeight: 'bold', margin: '0' }}>FIRMA TESTIGO (SI LO HAY)</p>
+                                <p style={{ fontSize: '8pt', margin: '0.2rem 0' }}>C.C. ___________________</p>
                             </div>
                         </div>
 

@@ -6,9 +6,11 @@ interface PrintLayoutProps {
     patient: any;
     children: React.ReactNode;
     hideSeal?: boolean;
+    hidePatientInfo?: boolean;
+    hideFooter?: boolean;
 }
 
-const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children, hideSeal }) => {
+const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children, hideSeal, hidePatientInfo, hideFooter }) => {
     const { logoUrl, signatureUrl, sealUrl, doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
 
     return (
@@ -32,50 +34,54 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children, hid
                 </div>
             </div>
 
-            <div className="print-patient-info" style={{ marginBottom: '0.5rem' }}>
-                <div className="info-field">
-                    <span className="info-label">Paciente</span>
-                    <span className="info-value">{patient.name || '---'}</span>
+            {!hidePatientInfo && (
+                <div className="print-patient-info" style={{ marginBottom: '0.5rem' }}>
+                    <div className="info-field">
+                        <span className="info-label">Paciente</span>
+                        <span className="info-value">{patient.name || '---'}</span>
+                    </div>
+                    <div className="info-field">
+                        <span className="info-label">Identificación</span>
+                        <span className="info-value">{patient.id || '---'}</span>
+                    </div>
+                    <div className="info-field">
+                        <span className="info-label">Edad</span>
+                        <span className="info-value">{patient.age || '---'}</span>
+                    </div>
+                    <div className="info-field">
+                        <span className="info-label">Fecha</span>
+                        <span className="info-value">{new Date(patient.date).toLocaleDateString()}</span>
+                    </div>
                 </div>
-                <div className="info-field">
-                    <span className="info-label">Identificación</span>
-                    <span className="info-value">{patient.id || '---'}</span>
-                </div>
-                <div className="info-field">
-                    <span className="info-label">Edad</span>
-                    <span className="info-value">{patient.age || '---'}</span>
-                </div>
-                <div className="info-field">
-                    <span className="info-label">Fecha</span>
-                    <span className="info-value">{new Date(patient.date).toLocaleDateString()}</span>
-                </div>
-            </div>
+            )}
 
             <div className="print-body" style={{ minHeight: '100px', marginBottom: '0.75rem' }}>
                 {children}
             </div>
 
-            <div className="print-footer" style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
-                <div className="signature" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    {signatureUrl ? (
-                        <img src={signatureUrl} alt="Firma" crossOrigin="anonymous" style={{ maxWidth: '160px', maxHeight: '50px', objectFit: 'contain', zIndex: 1, position: 'relative', marginBottom: '-8px' }} />
-                    ) : (
-                        <div style={{ height: '40px' }} />
-                    )}
-
-                    <div className="signature-line" style={{ borderTop: '1px solid #1f2937', width: '220px', paddingTop: '0.3rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>
-                        {sealUrl && !hideSeal && (
-                            <img src={sealUrl} alt="Sello" crossOrigin="anonymous" style={{ position: 'absolute', right: '-110px', bottom: '-18px', width: '200px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
+            {!hideFooter && (
+                <div className="print-footer" style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
+                    <div className="signature" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {signatureUrl ? (
+                            <img src={signatureUrl} alt="Firma" crossOrigin="anonymous" style={{ maxWidth: '160px', maxHeight: '50px', objectFit: 'contain', zIndex: 1, position: 'relative', marginBottom: '-8px' }} />
+                        ) : (
+                            <div style={{ height: '40px' }} />
                         )}
-                        <p style={{ fontWeight: 700, color: '#111827', fontSize: '9pt', margin: 0 }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
-                        <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>Cirujano Plástico Estético y Reconstructivo</p>
-                        <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
+
+                        <div className="signature-line" style={{ borderTop: '1px solid #1f2937', width: '220px', paddingTop: '0.3rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>
+                            {sealUrl && !hideSeal && (
+                                <img src={sealUrl} alt="Sello" crossOrigin="anonymous" style={{ position: 'absolute', right: '-110px', bottom: '-18px', width: '200px', objectFit: 'contain', opacity: 0.85, zIndex: 0 }} />
+                            )}
+                            <p style={{ fontWeight: 700, color: '#111827', fontSize: '9pt', margin: 0 }}>{doctorName || 'Dr. Giovanni Fuentes'}</p>
+                            <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>Cirujano Plástico Estético y Reconstructivo</p>
+                            <p style={{ fontSize: '8pt', color: '#4b5563', margin: 0 }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
+                        </div>
+                    </div>
+                    <div className="qr-placeholder" style={{ width: '60px', height: '60px', fontSize: '8px' }}>
+                        <div style={{ textAlign: 'center' }}>Validez<br />Digital<br />QR</div>
                     </div>
                 </div>
-                <div className="qr-placeholder" style={{ width: '60px', height: '60px', fontSize: '8px' }}>
-                    <div style={{ textAlign: 'center' }}>Validez<br />Digital<br />QR</div>
-                </div>
-            </div>
+            )}
         </div>
     );
 };
