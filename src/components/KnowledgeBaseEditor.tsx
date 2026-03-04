@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
-import { BookOpen, Plus, Trash2, Edit2, Save, X, Search, FileText, Upload, Loader2, ShieldCheck } from 'lucide-react';
+import { BookOpen, Plus, Trash2, Edit2, Save, X, Search, FileText } from 'lucide-react';
 import { useConfig } from '../context/ConfigContext';
 import type { KnowledgeItem } from '../context/ConfigContext';
-import { processFile } from '../utils/fileProcessor';
 
 const KnowledgeBaseEditor: React.FC = () => {
     const { knowledgeBase, updateCatalog } = useConfig();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [uploadError, setUploadError] = useState<string | null>(null);
 
     // Form state
     const [formData, setFormData] = useState<Partial<KnowledgeItem>>({
@@ -43,42 +40,6 @@ const KnowledgeBaseEditor: React.FC = () => {
         resetForm();
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        setIsProcessing(true);
-        setUploadError(null);
-        const newItems: KnowledgeItem[] = [];
-
-        try {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const extracted = await processFile(file);
-
-                extracted.forEach(item => {
-                    newItems.push({
-                        id: Math.random().toString(36).substr(2, 9),
-                        title: item.title,
-                        content: item.content,
-                        category: item.category,
-                        lastUpdated: new Date().toISOString()
-                    });
-                });
-            }
-
-            if (newItems.length > 0) {
-                updateCatalog('knowledgeBase', [...knowledgeBase, ...newItems]);
-                alert(`¡Éxito! Se han importado ${newItems.length} elementos a la base del conocimiento.`);
-            }
-        } catch (error: any) {
-            setUploadError(error.message);
-            console.error(error);
-        } finally {
-            setIsProcessing(false);
-            if (e.target) e.target.value = ''; // Reset input
-        }
-    };
 
     const handleDelete = (id: string) => {
         if (window.confirm('¿Estás seguro de eliminar esta información? La IA dejará de conocer este protocolo.')) {
@@ -109,60 +70,7 @@ const KnowledgeBaseEditor: React.FC = () => {
     );
 
     return (
-        <div className="catalog-manager" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* NEW: Prominent Upload Section at the Top */}
-            {!editingId && (
-                <div className="item-card" style={{
-                    background: 'rgba(37, 99, 235, 0.05)',
-                    border: '2px dashed var(--primary)',
-                    borderRadius: '16px',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '1rem'
-                }}>
-                    <div style={{ background: 'var(--primary)', color: 'white', padding: '0.8rem', borderRadius: '50%', marginBottom: '0.5rem' }}>
-                        <Upload size={32} />
-                    </div>
-                    <h3 style={{ margin: 0, color: 'var(--primary)', fontSize: '1.4rem' }}>¡NUEVO! Importar Protocolos desde Archivos</h3>
-                    <p style={{ color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto', fontSize: '1rem' }}>
-                        Carga tus archivos de <strong>Excel, Word (Docx) o PDF</strong>. La IA leerá el contenido automáticamente y lo guardará en tu base de datos local.
-                    </p>
-
-                    <div style={{ background: '#fef3c7', color: '#92400e', padding: '0.6rem 1rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <ShieldCheck size={16} /> Nota: El procesamiento es local. NO necesitas conectar ninguna Web API Key adicional.
-                    </div>
-
-                    <label
-                        className="action-btn"
-                        style={{
-                            background: 'var(--primary)',
-                            color: 'white',
-                            cursor: isProcessing ? 'not-allowed' : 'pointer',
-                            padding: '1rem 2.5rem',
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            borderRadius: '12px',
-                            marginTop: '0.5rem',
-                            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)'
-                        }}
-                    >
-                        {isProcessing ? <Loader2 size={24} className="animate-spin" /> : <Plus size={24} />}
-                        {isProcessing ? 'Procesando Archivos...' : 'Seleccionar Documentos'}
-                        <input
-                            type="file"
-                            multiple
-                            onChange={handleFileUpload}
-                            accept=".pdf,.docx,.xlsx,.xls,.csv"
-                            style={{ display: 'none' }}
-                            disabled={isProcessing}
-                        />
-                    </label>
-                    {uploadError && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>❌ {uploadError}</p>}
-                </div>
-            )}
+        <div className="catalog-manager">
 
             <div className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1.5rem', background: 'var(--card-bg)', border: '1px solid var(--primary-light)' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
