@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Save, FileText, Loader2, Clock, User, Clipboard, Activity } from 'lucide-react';
+import { Save, FileText, Loader2, Clock, User, Clipboard, Activity, Search, BookOpen } from 'lucide-react';
 import PrintLayout from './PrintLayout';
+import { useConfig } from '../context/ConfigContext';
 
 interface Patient {
     name: string;
@@ -15,8 +16,15 @@ interface SurgicalDescriptionProps {
 }
 
 const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) => {
+    const { surgicalTemplates, frequentDiagnoses, frequentSurgeries } = useConfig();
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+
+    // UI state for search/selection
+    const [showTemplates, setShowTemplates] = useState(false);
+    const [showDiagSearch, setShowDiagSearch] = useState<'pre' | 'post' | null>(null);
+    const [showSurgerySearch, setShowSurgerySearch] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -60,6 +68,30 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const applyTemplate = (template: any) => {
+        setFormData(prev => ({
+            ...prev,
+            techniqueDescription: template.technicalDescription,
+            findings: template.findings || prev.findings,
+            complications: template.complications || prev.complications,
+            postOpStatus: template.postOpStatus || prev.postOpStatus
+        }));
+        setShowTemplates(false);
+    };
+
+    const selectDiagnosis = (diag: any, type: 'pre' | 'post') => {
+        const field = type === 'pre' ? 'preOpDiagnosis' : 'postOpDiagnosis';
+        setFormData(prev => ({ ...prev, [field]: `${diag.code} - ${diag.name}` }));
+        setShowDiagSearch(null);
+        setSearchTerm('');
+    };
+
+    const selectSurgery = (surgery: any) => {
+        setFormData(prev => ({ ...prev, procedureName: `${surgery.code} - ${surgery.name}` }));
+        setShowSurgerySearch(false);
+        setSearchTerm('');
+    };
+
     const handleSave = async () => {
         setSaving(true);
         try {
@@ -92,12 +124,32 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
                 {/* Header Information */}
-                <div className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                <div className="item-card" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid var(--primary)', padding: '1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary)', padding: '10px', borderRadius: '10px' }}>
                             <Activity size={24} />
                         </div>
                         <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Nueva Descripción Quirúrgica</h2>
+                    </div>
+
+                    <div style={{ position: 'relative' }}>
+                        <button className="action-btn" onClick={() => setShowTemplates(!showTemplates)}>
+                            <BookOpen size={18} /> Cargar Plantilla
+                        </button>
+                        {showTemplates && (
+                            <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: '110%', width: '300px', zIndex: 100, background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', border: '1px solid var(--border-color)', padding: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                                <div style={{ padding: '0.5rem', fontWeight: 600, borderBottom: '1px solid #eee', marginBottom: '0.5rem' }}>Tus Plantillas</div>
+                                {surgicalTemplates.length === 0 ? (
+                                    <p style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>No hay plantillas configuradas.</p>
+                                ) : (
+                                    surgicalTemplates.map(t => (
+                                        <div key={t.id} className="dropdown-item" style={{ padding: '0.8rem', cursor: 'pointer', borderRadius: '8px', transition: 'background 0.2s' }} onClick={() => applyTemplate(t)}>
+                                            <div style={{ fontWeight: 500 }}>{t.name}</div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -163,18 +215,63 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary)' }}>
                             <Clipboard size={18} /> Diagnósticos y Procedimiento
                         </h3>
-                        <div className="form-group">
+                        <div className="form-group" style={{ position: 'relative' }}>
                             <label className="form-label">Nombre del Procedimiento</label>
-                            <input type="text" name="procedureName" className="form-input" placeholder="Ej: Lipoescultura con transferencia glútea" value={formData.procedureName} onChange={handleChange} />
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <input type="text" name="procedureName" className="form-input" style={{ flex: 1 }} placeholder="Ej: Lipoescultura con transferencia glútea" value={formData.procedureName} onChange={handleChange} />
+                                <button className="action-btn" onClick={() => { setShowSurgerySearch(!showSurgerySearch); setSearchTerm(''); }}><Search size={18} /></button>
+                            </div>
+                            {showSurgerySearch && (
+                                <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+                                    <input autoFocus className="form-input" placeholder="Buscar cirugía..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                        {frequentSurgeries.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map(s => (
+                                            <div key={s.id} className="dropdown-item" onClick={() => selectSurgery(s)}>
+                                                {s.code} - {s.name}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <div className="form-row">
-                            <div className="form-group">
-                                <label className="form-label">Diagnóstico Pre-Operatorio</label>
+                            <div className="form-group" style={{ position: 'relative' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <label className="form-label">Diagnóstico Pre-Operatorio</label>
+                                    <button className="link-btn" style={{ fontSize: '0.8rem' }} onClick={() => { setShowDiagSearch('pre'); setSearchTerm(''); }}><Search size={14} /> Buscar</button>
+                                </div>
                                 <textarea name="preOpDiagnosis" className="form-input" rows={2} value={formData.preOpDiagnosis} onChange={handleChange} />
+                                {showDiagSearch === 'pre' && (
+                                    <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+                                        <input autoFocus className="form-input" placeholder="Buscar diagnóstico..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
+                                        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                            {frequentDiagnoses.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.code.toLowerCase().includes(searchTerm.toLowerCase())).map(d => (
+                                                <div key={d.id} className="dropdown-item" onClick={() => selectDiagnosis(d, 'pre')}>
+                                                    {d.code} - {d.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Diagnóstico Post-Operatorio</label>
+                            <div className="form-group" style={{ position: 'relative' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <label className="form-label">Diagnóstico Post-Operatorio</label>
+                                    <button className="link-btn" style={{ fontSize: '0.8rem' }} onClick={() => { setShowDiagSearch('post'); setSearchTerm(''); }}><Search size={14} /> Buscar</button>
+                                </div>
                                 <textarea name="postOpDiagnosis" className="form-input" rows={2} value={formData.postOpDiagnosis} onChange={handleChange} />
+                                {showDiagSearch === 'post' && (
+                                    <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+                                        <input autoFocus className="form-input" placeholder="Buscar diagnóstico..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
+                                        <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                            {frequentDiagnoses.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.code.toLowerCase().includes(searchTerm.toLowerCase())).map(d => (
+                                                <div key={d.id} className="dropdown-item" onClick={() => selectDiagnosis(d, 'post')}>
+                                                    {d.code} - {d.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -274,6 +371,34 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                     </div>
                 )}
             </div>
+
+            <style>{`
+                .dropdown-item {
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    font-size: 0.9rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .dropdown-item:hover {
+                    background-color: var(--primary-light);
+                    color: var(--primary);
+                }
+                .link-btn {
+                    background: none;
+                    border: none;
+                    color: var(--primary);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 0;
+                    font-weight: 500;
+                }
+                .link-btn:hover {
+                    text-decoration: underline;
+                }
+            `}</style>
 
             {/* Hidden Print Layout */}
             <div className="print-only">

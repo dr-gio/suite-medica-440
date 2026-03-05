@@ -22,6 +22,9 @@ const Settings: React.FC = () => {
         { id: 'consent-templates', label: '📝 Consentimientos' },
         { id: 'ai-knowledge', label: '🧠 Base de IA' },
         { id: 'results', label: '📸 Resultados' },
+        { id: 'surgical-templates', label: '📝 Plantillas Quirúrgicas' },
+        { id: 'diagnoses', label: '📋 Diagnósticos (CIE-10)' },
+        { id: 'cups', label: '🏥 Cirugías (CUPS)' },
     ];
 
     const renderContent = () => {
@@ -52,6 +55,12 @@ const Settings: React.FC = () => {
                 return <KnowledgeBaseEditor />;
             case 'results':
                 return <SurgeryResultsConfig />;
+            case 'surgical-templates':
+                return <SurgicalTemplatesConfig />;
+            case 'diagnoses':
+                return <DiagnosesConfig />;
+            case 'cups':
+                return <CUPSConfig />;
             default:
                 return null;
         }
@@ -949,6 +958,114 @@ const SurgeryResultsConfig: React.FC = () => {
             ))}
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Enlace de Resultado</button>
+                <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Catálogo</button>
+            </div>
+        </div>
+    );
+};
+
+const SurgicalTemplatesConfig: React.FC = () => {
+    const { surgicalTemplates, updateCatalog } = useConfig();
+    const [items, setItems] = useState(surgicalTemplates);
+
+    const addItem = () => setItems([...items, { id: Date.now().toString(), name: '', technicalDescription: '', findings: '', complications: 'Ninguna', postOpStatus: 'Paciente en recuperación' }]);
+    const updateItem = (index: number, field: string, val: string) => {
+        const newItems = [...items];
+        newItems[index] = { ...newItems[index], [field]: val };
+        setItems(newItems);
+    };
+    const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+    const handleSave = () => updateCatalog('surgicalTemplates', items);
+
+    return (
+        <div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Crea plantillas para las técnicas quirúrgicas que más utilizas. Podrás cargarlas automáticamente al llenar una descripción.
+            </p>
+            {items.map((m, i) => (
+                <div key={m.id} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                        <input className="form-input" style={{ flex: 1, fontWeight: 'bold' }} placeholder="Nombre de la Plantilla (ej: Rinoplastia Primaria)" value={m.name} onChange={(e) => updateItem(i, 'name', e.target.value)} />
+                        <button className="remove-btn" onClick={() => removeItem(i)}><X size={18} /></button>
+                    </div>
+                    <textarea className="form-input" rows={6} placeholder="Descripción Técnica Paso a Paso..." value={m.technicalDescription} onChange={(e) => updateItem(i, 'technicalDescription', e.target.value)} />
+                    <div className="form-row">
+                        <textarea className="form-input" style={{ flex: 1 }} placeholder="Hallazgos comunes (opcional)" value={m.findings || ''} onChange={(e) => updateItem(i, 'findings', e.target.value)} />
+                        <textarea className="form-input" style={{ flex: 1 }} placeholder="Complicaciones (ej: Ninguna)" value={m.complications || ''} onChange={(e) => updateItem(i, 'complications', e.target.value)} />
+                    </div>
+                </div>
+            ))}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Plantilla</button>
+                <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Catálogo</button>
+            </div>
+        </div>
+    );
+};
+
+const DiagnosesConfig: React.FC = () => {
+    const { frequentDiagnoses, updateCatalog } = useConfig();
+    const [items, setItems] = useState(frequentDiagnoses);
+
+    const addItem = () => setItems([...items, { id: Date.now().toString(), code: '', name: '' }]);
+    const updateItem = (index: number, field: string, val: string) => {
+        const newItems = [...items];
+        newItems[index] = { ...newItems[index], [field]: val };
+        setItems(newItems);
+    };
+    const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+    const handleSave = () => updateCatalog('frequentDiagnoses', items);
+
+    return (
+        <div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Define tus diagnósticos más frecuentes para agilizar el llenado de historias clínicas.
+            </p>
+            {items.map((m, i) => (
+                <div key={m.id} className="item-card" style={{ marginBottom: '1rem', gap: '1rem' }}>
+                    <input className="form-input" style={{ width: '100px' }} placeholder="CIE-10" value={m.code} onChange={(e) => updateItem(i, 'code', e.target.value)} />
+                    <input className="form-input" style={{ flex: 1 }} placeholder="Nombre del Diagnóstico" value={m.name} onChange={(e) => updateItem(i, 'name', e.target.value)} />
+                    <button className="remove-btn" onClick={() => removeItem(i)}><X size={18} /></button>
+                </div>
+            ))}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Diagnóstico</button>
+                <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Catálogo</button>
+            </div>
+        </div>
+    );
+};
+
+const CUPSConfig: React.FC = () => {
+    const { frequentSurgeries, updateCatalog } = useConfig();
+    const [items, setItems] = useState(frequentSurgeries);
+
+    const addItem = () => setItems([...items, { id: Date.now().toString(), code: '', name: '' }]);
+    const updateItem = (index: number, field: string, val: string) => {
+        const newItems = [...items];
+        newItems[index] = { ...newItems[index], [field]: val };
+        setItems(newItems);
+    };
+    const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+    const handleSave = () => updateCatalog('frequentSurgeries', items);
+
+    return (
+        <div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Define tus cirugías (CUPS) más frecuentes para agilizar el llenado del acto quirúrgico.
+            </p>
+            {items.map((m, i) => (
+                <div key={m.id} className="item-card" style={{ marginBottom: '1rem', gap: '1rem' }}>
+                    <input className="form-input" style={{ width: '120px' }} placeholder="CUPS" value={m.code} onChange={(e) => updateItem(i, 'code', e.target.value)} />
+                    <input className="form-input" style={{ flex: 1 }} placeholder="Nombre de la Cirugía" value={m.name} onChange={(e) => updateItem(i, 'name', e.target.value)} />
+                    <button className="remove-btn" onClick={() => removeItem(i)}><X size={18} /></button>
+                </div>
+            ))}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Cirugía</button>
                 <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Catálogo</button>
             </div>
         </div>
