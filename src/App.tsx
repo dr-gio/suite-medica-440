@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './App.css';
-import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet, FolderOpen, FileText } from 'lucide-react';
+import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet, FolderOpen, FileText, Image as ImageIcon } from 'lucide-react';
 import PinLock, { useAutoLock } from './components/PinLock';
 import SharePanel from './components/SharePanel';
 import Prescriptions from './components/Prescriptions';
@@ -16,6 +16,7 @@ import EconomicProposal from './components/EconomicProposal';
 import SalesTools from './components/SalesTools';
 import AIChat from './components/AIChat';
 import InformedConsent from './components/InformedConsent';
+import SurgeryResults from './components/SurgeryResults';
 
 import { useConfig } from './context/ConfigContext';
 
@@ -50,6 +51,7 @@ function App() {
     { id: 'travel', label: 'Cert. Viaje', icon: <Plane size={20} /> },
     { id: 'referral', label: 'Remisiones', icon: <Send size={20} /> },
     { id: 'proposal', label: 'Presupuesto', icon: <Wallet size={20} /> },
+    { id: 'surgery-results', label: '📸 Resultados', icon: <ImageIcon size={20} /> },
     { id: 'sales-tools', label: 'Herramientas Vtas', icon: <FolderOpen size={20} /> },
     { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} /> },
   ];
@@ -76,6 +78,8 @@ function App() {
         return <Referral patient={patient} />;
       case 'proposal':
         return <EconomicProposal patient={patient} />;
+      case 'surgery-results':
+        return <SurgeryResults />;
       case 'sales-tools':
         return <SalesTools />;
       case 'settings':

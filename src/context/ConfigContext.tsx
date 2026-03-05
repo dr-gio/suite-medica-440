@@ -10,6 +10,7 @@ export interface SurgeryTemplate { id: string; name: string; preText: string; po
 export interface NutritionPhase { id: string; name: string; desc: string; }
 export interface KnowledgeItem { id: string; title: string; content: string; category: string; lastUpdated: string; }
 export interface ConsentTemplate { id: string; name: string; content: string; }
+export interface SurgeryResult { id: string; name: string; url: string; description?: string; }
 
 interface ConfigContextData {
     logoUrl?: string;
@@ -28,9 +29,10 @@ interface ConfigContextData {
     nutrition: NutritionPhase[];
     consentTemplates: ConsentTemplate[];
     knowledgeBase: KnowledgeItem[];
+    surgeryResults: SurgeryResult[];
     proposalIntro?: string;
     proposalPolicies?: string;
-    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies' | 'consentTemplates'>(catalog: T, items: any) => void;
+    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies' | 'consentTemplates' | 'surgeryResults'>(catalog: T, items: any) => void;
     updateImagesBatch: (updates: { logo?: string; signature?: string; seal?: string }) => void;
 }
 
@@ -100,6 +102,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [nutrition, setNutrition] = useState<NutritionPhase[]>(defaultNutrition);
     const [consentTemplates, setConsentTemplates] = useState<ConsentTemplate[]>(defaultConsents);
     const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
+    const [surgeryResults, setSurgeryResults] = useState<SurgeryResult[]>([]);
     const [proposalIntro, setProposalIntro] = useState<string | undefined>('Estimada(o) {{paciente}}, es un placer para nosotros en 440 Clinic by Dr. Gio presentarte este presupuesto, diseñado exclusivamente para ti. Agradecemos la confianza que depositas en nuestro equipo para acompañarte en este importante camino hacia la perfecta armonía que deseas.');
     const [proposalPolicies, setProposalPolicies] = useState<string | undefined>('• El descuento por pronto pago se hace efectivo al realizar el abono inicial del 30% sobre el valor total de la cirugía. Este abono debe realizarse dentro de los 15 días posteriores a la fecha de emisión de esta cotización.\n• Dicho abono del 30% garantiza la reserva de su cupo y fecha quirúrgica, y a su vez congela el precio de los procedimientos cotizados por un período de seis (6) meses.');
     const [loaded, setLoaded] = useState(false);
@@ -169,6 +172,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     category: k.category,
                     lastUpdated: k.lastUpdated || k.updated_at || new Date().toISOString()
                 })));
+                if (data.surgery_results?.length) setSurgeryResults(data.surgery_results);
                 if (data.proposal_intro) setProposalIntro(data.proposal_intro);
                 if (data.proposal_policies) setProposalPolicies(data.proposal_policies);
                 setLoaded(true);
@@ -203,6 +207,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 }
                 if (parsed.proposalIntro) setProposalIntro(parsed.proposalIntro);
                 if (parsed.proposalPolicies) setProposalPolicies(parsed.proposalPolicies);
+                if (parsed.surgeryResults) setSurgeryResults(parsed.surgeryResults);
             } catch (e) { console.error('Failed to load configs', e); }
         }
         setLoaded(true);
@@ -233,6 +238,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         surgeries: SurgeryTemplate[]; nutrition: NutritionPhase[];
         consent_templates: ConsentTemplate[];
         knowledge_base: KnowledgeItem[];
+        surgery_results: SurgeryResult[];
         proposal_intro: string | undefined; proposal_policies: string | undefined;
     }>) => {
         await supabase.from('suite_config').upsert({
@@ -243,6 +249,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             medications, labs, imaging, surgeries, nutrition,
             consent_templates: consentTemplates,
             knowledge_base: knowledgeBase,
+            surgery_results: surgeryResults,
             proposal_intro: proposalIntro, proposal_policies: proposalPolicies,
             ...updates,
             updated_at: new Date().toISOString(),
@@ -273,6 +280,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         else if (catalog === 'proposalIntro') { setProposalIntro(items); saveToSupabase({ proposal_intro: items }); }
         else if (catalog === 'proposalPolicies') { setProposalPolicies(items); saveToSupabase({ proposal_policies: items }); }
+        else if (catalog === 'surgeryResults') { setSurgeryResults(items); saveToSupabase({ surgery_results: items }); }
     };
 
     // Bulk update for settings page optimization
@@ -290,7 +298,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <ConfigContext.Provider value={{
             logoUrl, signatureUrl, sealUrl, gmailClientId,
             doctorName, rethus, address, contactPhone, websiteUrl,
-            medications, labs, imaging, surgeries, nutrition, consentTemplates, knowledgeBase,
+            medications, labs, imaging, surgeries, nutrition, consentTemplates, knowledgeBase, surgeryResults,
             proposalIntro, proposalPolicies, updateCatalog, updateImagesBatch
         }}>
             {children}

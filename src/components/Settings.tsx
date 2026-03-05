@@ -21,6 +21,7 @@ const Settings: React.FC = () => {
         { id: 'proposal', label: '📄 Textos Presupuesto' },
         { id: 'consent-templates', label: '📝 Consentimientos' },
         { id: 'ai-knowledge', label: '🧠 Base de IA' },
+        { id: 'results', label: '📸 Resultados' },
     ];
 
     const renderContent = () => {
@@ -49,6 +50,8 @@ const Settings: React.FC = () => {
                 return <ConsentConfig />;
             case 'ai-knowledge':
                 return <KnowledgeBaseEditor />;
+            case 'results':
+                return <SurgeryResultsConfig />;
             default:
                 return null;
         }
@@ -894,6 +897,59 @@ const ConsentConfig: React.FC = () => {
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Nueva Plantilla</button>
                 <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Consentimientos</button>
+            </div>
+        </div>
+    );
+};
+
+const SurgeryResultsConfig: React.FC = () => {
+    const { surgeryResults, updateCatalog } = useConfig();
+    const [items, setItems] = useState(surgeryResults);
+
+    const addItem = () => setItems([...items, { id: Date.now().toString(), name: '', url: '', description: '' }]);
+    const updateItem = (index: number, field: string, val: string) => {
+        const newItems = [...items];
+        newItems[index] = { ...newItems[index], [field]: val };
+        setItems(newItems);
+    };
+    const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
+
+    const handleSave = () => updateCatalog('surgeryResults', items);
+
+    return (
+        <div>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Configura los enlaces a las landing pages de resultados (Antes & Después) para que las asesoras puedan compartirlos fácilmente.
+            </p>
+            {items.map((m, i) => (
+                <div key={m.id} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                        <input
+                            className="form-input"
+                            style={{ flex: 1, fontWeight: 'bold' }}
+                            placeholder="Nombre de la Cirugía (ej: Rinoplastia)"
+                            value={m.name}
+                            onChange={(e) => updateItem(i, 'name', e.target.value)}
+                        />
+                        <button className="remove-btn" onClick={() => removeItem(i)}><X size={18} /></button>
+                    </div>
+                    <input
+                        className="form-input"
+                        placeholder="URL de la Landing Page (https://...)"
+                        value={m.url}
+                        onChange={(e) => updateItem(i, 'url', e.target.value)}
+                    />
+                    <input
+                        className="form-input"
+                        placeholder="Descripción breve (opcional)"
+                        value={m.description || ''}
+                        onChange={(e) => updateItem(i, 'description', e.target.value)}
+                    />
+                </div>
+            ))}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button className="action-btn" onClick={addItem}><Plus size={18} /> Agregar Enlace de Resultado</button>
+                <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Catálogo</button>
             </div>
         </div>
     );
