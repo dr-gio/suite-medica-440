@@ -19,7 +19,6 @@ interface ConfigContextData {
     logoUrl?: string;
     signatureUrl?: string;
     sealUrl?: string;
-    gmailClientId?: string;
     doctorName?: string;
     rethus?: string;
     address?: string;
@@ -38,7 +37,7 @@ interface ConfigContextData {
     surgicalTemplates: SurgicalDescTemplate[];
     frequentDiagnoses: FrequentDiagnosis[];
     frequentSurgeries: FrequentSurgery[];
-    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'gmailClientId' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies' | 'consentTemplates' | 'surgeryResults' | 'surgicalTemplates' | 'frequentDiagnoses' | 'frequentSurgeries'>(catalog: T, items: any) => void;
+    updateCatalog: <T extends 'medications' | 'labs' | 'imaging' | 'surgeries' | 'nutrition' | 'knowledgeBase' | 'logoUrl' | 'signatureUrl' | 'sealUrl' | 'doctorName' | 'rethus' | 'address' | 'contactPhone' | 'websiteUrl' | 'proposalIntro' | 'proposalPolicies' | 'consentTemplates' | 'surgeryResults' | 'surgicalTemplates' | 'frequentDiagnoses' | 'frequentSurgeries'>(catalog: T, items: any) => void;
     updateImagesBatch: (updates: { logo?: string; signature?: string; seal?: string }) => void;
 }
 
@@ -95,7 +94,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
     const [signatureUrl, setSignatureUrl] = useState<string | undefined>(undefined);
     const [sealUrl, setSealUrl] = useState<string | undefined>(undefined);
-    const [gmailClientId, setGmailClientId] = useState<string | undefined>(undefined);
     const [doctorName, setDoctorName] = useState<string | undefined>('Dr. Giovanni Fuentes');
     const [rethus, setRethus] = useState<string | undefined>('CMC2017-222322');
     const [address, setAddress] = useState<string | undefined>('Cra 47 # 79-191, Barranquilla');
@@ -156,7 +154,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (data.signature_url && !localSig) setSignatureUrl(data.signature_url);
                 if (data.seal_url && !localSeal) setSealUrl(data.seal_url);
 
-                if (data.gmail_client_id) setGmailClientId(data.gmail_client_id);
                 if (data.doctor_name) setDoctorName(data.doctor_name);
                 if (data.rethus) setRethus(data.rethus);
                 if (data.address) setAddress(data.address);
@@ -199,7 +196,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (parsed.logoUrl) setLogoUrl(parsed.logoUrl);
                 if (parsed.signatureUrl) setSignatureUrl(parsed.signatureUrl);
                 if (parsed.sealUrl) setSealUrl(parsed.sealUrl);
-                if (parsed.gmailClientId) setGmailClientId(parsed.gmailClientId);
                 if (parsed.doctorName) setDoctorName(parsed.doctorName);
                 if (parsed.rethus) setRethus(parsed.rethus);
                 if (parsed.address) setAddress(parsed.address);
@@ -244,7 +240,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const saveToSupabase = async (updates: Partial<{
-        gmail_client_id: string | undefined;
         doctor_name: string | undefined; rethus: string | undefined;
         address: string | undefined; contact_phone: string | undefined;
         website_url: string | undefined;
@@ -260,7 +255,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }>) => {
         await supabase.from('suite_config').upsert({
             id: 'main',
-            gmail_client_id: gmailClientId,
             doctor_name: doctorName, rethus, address, contact_phone: contactPhone,
             website_url: websiteUrl,
             medications, labs, imaging, surgeries, nutrition,
@@ -280,7 +274,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (catalog === 'logoUrl') { setLogoUrl(items); saveImagesToLocal({ logoUrl: items }); }
         else if (catalog === 'signatureUrl') { setSignatureUrl(items); saveImagesToLocal({ signatureUrl: items }); }
         else if (catalog === 'sealUrl') { setSealUrl(items); saveImagesToLocal({ sealUrl: items }); }
-        else if (catalog === 'gmailClientId') { setGmailClientId(items); saveToSupabase({ gmail_client_id: items }); }
         else if (catalog === 'doctorName') { setDoctorName(items); saveToSupabase({ doctor_name: items }); }
         else if (catalog === 'rethus') { setRethus(items); saveToSupabase({ rethus: items }); }
         else if (catalog === 'address') { setAddress(items); saveToSupabase({ address: items }); }
@@ -319,7 +312,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     return (
         <ConfigContext.Provider value={{
-            logoUrl, signatureUrl, sealUrl, gmailClientId,
+            logoUrl, signatureUrl, sealUrl,
             doctorName, rethus, address, contactPhone, websiteUrl,
             medications, labs, imaging, surgeries, nutrition, consentTemplates, knowledgeBase, surgeryResults,
             proposalIntro, proposalPolicies, surgicalTemplates, frequentDiagnoses, frequentSurgeries, updateCatalog, updateImagesBatch

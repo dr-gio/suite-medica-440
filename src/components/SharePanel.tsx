@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Download, MessageCircle, Mail, Share2, CheckCircle, Send } from 'lucide-react';
+import { Mail, Share2, CheckCircle, Send, Loader2, Download, MessageCircle, X } from 'lucide-react';
 import { useConfig } from '../context/ConfigContext';
-import { sendGmailWithAttachment } from '../services/GmailService';
+import { supabase } from '../lib/supabase';
 
 interface Props {
     patient: { name: string; id: string; date: string; age: string };
@@ -10,7 +10,7 @@ interface Props {
 }
 
 const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
-    const { gmailClientId, doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
+    const { doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [downloaded, setDownloaded] = useState(false);
@@ -37,10 +37,6 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
     };
 
     const handleEmail = async () => {
-        if (!gmailClientId) {
-            alert('Configura el Gmail Client ID primero en Configuración → General / Logo.');
-            return;
-        }
         setSending(true);
         setSendError(null);
         setSent(false);
@@ -65,33 +61,49 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                     .outputPdf('blob');
             }
 
-            const date = new Date(patient.date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' });
+            // Convert blob to base64 for the edge function
+            let pdfBase64: string | undefined;
+            if (pdfBlob) {
+                const reader = new FileReader();
+                const base64Promise = new Promise<string>((resolve) => {
+                    reader.onloadend = () => {
+                        const base64data = (reader.result as string).split(',')[1];
+                        resolve(base64data);
+                    };
+                });
+                reader.readAsDataURL(pdfBlob);
+                pdfBase64 = await base64Promise;
+            }
+
             const bodyHtml = `
-                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px">
-                  <p>Estimado/a <strong>${patient.name || 'paciente'}</strong>,</p>
-                  <p>Adjunto encontrará su <strong>${documentTitle}</strong> generado el ${date} en <strong>440 Clinic</strong>.</p>
-                  <p>Si tiene alguna pregunta, no dude en contactarnos.</p>
-                  <hr style="margin:24px 0;border:none;border-top:1px solid #eee">
-                  <p style="margin:0;font-weight:600">${doctorName || 'Dr. Giovanni Fuentes'}</p>
-                  <p style="margin:4px 0;color:#555">Cirujano Plástico Estético y Reconstructivo</p>
-                  <p style="margin:4px 0;color:#555">RETHUS: ${rethus || 'CMC2017-222322'}</p>
-                  <p style="margin:4px 0;color:#555">440 Clinic &mdash; ${address || 'Cra 47 # 79-191, Barranquilla'}</p>
-                  <p style="margin:4px 0;color:#555">📞 +57 ${contactPhone || '3181800130'} &nbsp;|&nbsp; 🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}</p>
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                  <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                  <p>Adjunto encontrarás tu documento médico (<strong>${documentTitle}</strong>).</p>
+                  <p>Si tienes alguna duda, responde este correo.</p>
+                  <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                    <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                    <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                  </div>
                 </div>
             `;
 
-            await sendGmailWithAttachment({
-                clientId: gmailClientId,
-                to: email,
-                subject: `${documentTitle} — ${patient.name} — 440 Clinic`,
-                bodyHtml,
-                pdfBlob,
-                pdfFilename,
+            const { error } = await supabase.functions.invoke('send-email', {
+                body: {
+                    to: email,
+                    subject: `Documento médico – 440 Clinic`,
+                    body: bodyHtml,
+                    pdfBase64,
+                    pdfFilename,
+                    documentId: patient.id // Patient ID is used as documentId if direct doc id isn't available
+                }
             });
+
+            if (error) throw error;
 
             setSent(true);
             setTimeout(() => setSent(false), 4000);
         } catch (err: any) {
+            console.error('Email error:', err);
             setSendError(err.message || 'Error al enviar el correo.');
         }
         setSending(false);
@@ -100,8 +112,6 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
     const handleDownloadPdf = async () => {
         setLoading(true);
         try {
-            // Trigger print and let browser handle it as Save PDF
-            // We use a custom approach using dynamic CSS to show the printable area
             const printEl = document.querySelector('.printable-document') as HTMLElement;
             if (!printEl) {
                 alert('Primero genera el contenido del documento en la vista activa.');
@@ -109,7 +119,6 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                 return;
             }
 
-            // Dynamically import html2pdf
             const html2pdf = (await import('html2pdf.js')).default;
             const patientSafe = (patient.name || 'documento').replace(/\s+/g, '_');
             const filename = `${documentTitle.replace(/\s+/g, '_')}_${patientSafe}.pdf`;
@@ -226,14 +235,13 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                     </div>
                 </div>
 
-                {/* Email - Gmail */}
-                <div style={{ background: 'rgba(234,67,53,0.05)', border: '1px solid rgba(234,67,53,0.25)', borderRadius: '12px', padding: '1.25rem' }}>
-                    <h4 style={{ margin: '0 0 0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b91c1c' }}>
-                        <Mail size={18} /> Enviar desde Gmail
+                {/* Email - SMTP */}
+                <div style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '12px', padding: '1.25rem' }}>
+                    <h4 style={{ margin: '0 0 0.75rem 0', display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#1d4ed8' }}>
+                        <Mail size={18} /> Enviar por correo electrónico
                     </h4>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem 0' }}>
-                        Abre Gmail en una nueva pestaña con el correo ya redactado. Solo da clic en <strong>Enviar</strong>.
-                        Asegúrate de estar con sesión iniciada en Gmail.
+                        Se enviará un correo automático desde <strong>drgio440@documentos.440clinic.online</strong> con el documento adjunto.
                     </p>
                     <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -247,25 +255,20 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                             />
                             <button
                                 onClick={handleEmail}
-                                disabled={!email || sending || !gmailClientId}
+                                disabled={!email || sending}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '0.4rem',
                                     padding: '0.65rem 1.1rem', borderRadius: '8px',
                                     border: 'none',
-                                    background: (email && gmailClientId && !sending) ? 'linear-gradient(135deg, #ea4335, #c5221f)' : '#d1d5db',
+                                    background: (email && !sending) ? 'var(--primary, #2563eb)' : '#d1d5db',
                                     color: 'white', fontWeight: 600,
-                                    cursor: (email && gmailClientId && !sending) ? 'pointer' : 'not-allowed',
+                                    cursor: (email && !sending) ? 'pointer' : 'not-allowed',
                                     whiteSpace: 'nowrap', fontSize: '0.9rem',
                                 }}
                             >
-                                {sent ? <><CheckCircle size={16} /> ¡Enviado!</> : sending ? 'Enviando...' : <><Send size={16} /> Enviar</>}
+                                {sent ? <><CheckCircle size={16} /> ¡Enviado!</> : sending ? <><Loader2 size={16} className="animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar</>}
                             </button>
                         </div>
-                        {!gmailClientId && (
-                            <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: 0 }}>
-                                ⚠️ Configura tu Gmail Client ID en <strong>Configuración → General / Logo</strong> para activar el envío automático.
-                            </p>
-                        )}
                         {sendError && (
                             <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: 0 }}>❌ {sendError}</p>
                         )}

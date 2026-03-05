@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '../context/ConfigContext';
-import { Plus, X, Save, ShieldCheck, Mail, Loader2, ToggleLeft, ToggleRight, Trash2, FileText, Upload } from 'lucide-react';
+import { Plus, X, Save, ShieldCheck, Loader2, ToggleLeft, ToggleRight, Trash2, FileText, Upload } from 'lucide-react';
 import { getStoredPin, setStoredPin } from './PinLock';
 import { supabase } from '../lib/supabase';
 import KnowledgeBaseEditor from './KnowledgeBaseEditor';
@@ -105,11 +105,10 @@ const Settings: React.FC = () => {
 
 // Config Components for each Catalog
 const GeneralConfig: React.FC = () => {
-    const { logoUrl, signatureUrl, sealUrl, gmailClientId, updateCatalog, updateImagesBatch } = useConfig() as any;
+    const { logoUrl, signatureUrl, sealUrl, updateCatalog, updateImagesBatch } = useConfig() as any;
     const [logo, setLogo] = useState<string | undefined>(logoUrl);
     const [signature, setSignature] = useState<string | undefined>(signatureUrl);
     const [seal, setSeal] = useState<string | undefined>(sealUrl);
-    const [gmailId, setGmailId] = useState(gmailClientId || '');
     const [saved, setSaved] = useState(false);
 
     useEffect(() => {
@@ -140,7 +139,6 @@ const GeneralConfig: React.FC = () => {
             updateCatalog('sealUrl', seal);
         }
 
-        updateCatalog('gmailClientId', gmailId || undefined);
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
     };
@@ -196,27 +194,7 @@ const GeneralConfig: React.FC = () => {
                 </div>
             </div>
 
-            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
-                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Mail size={20} /> Envío por Gmail (API)
-                </h3>
-                <p style={{ color: 'var(--text-muted)' }}>
-                    Para enviar documentos automáticamente desde tu correo de Google, ingresa tu <strong>Gmail OAuth Client ID</strong>.
-                    La primera vez se pedirá autorizar el acceso una sola vez.<br />
-                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
-                        → Obtener Client ID en Google Cloud Console
-                    </a>
-                </p>
-                <div style={{ width: '100%', maxWidth: '600px' }}>
-                    <label className="form-label">Gmail OAuth Client ID</label>
-                    <input
-                        className="form-input"
-                        placeholder="xxxxxxxxxx.apps.googleusercontent.com"
-                        value={gmailId}
-                        onChange={e => setGmailId(e.target.value)}
-                    />
-                </div>
-            </div>
+
 
             <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldCheck size={20} /> Seguridad &mdash; PIN de Acceso</h3>
