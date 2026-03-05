@@ -111,7 +111,6 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                     patient={patient}
                     title={`CONSENTIMIENTO INFORMADO: ${procedureName.toUpperCase() || 'PROCEDIMIENTO'}`}
                     hidePatientInfo={true}
-                    hideFooter={true}
                 >
                     <div style={{ lineHeight: '1.6', marginTop: '0.5rem', color: '#1f2937', fontSize: '10.5pt', textAlign: 'justify' }}>
                         <div style={{
