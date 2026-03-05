@@ -17,6 +17,7 @@ import SalesTools from './components/SalesTools';
 import AIChat from './components/AIChat';
 import InformedConsent from './components/InformedConsent';
 import SurgeryResults from './components/SurgeryResults';
+import SurgicalDescription from './components/SurgicalDescription';
 
 import { useConfig } from './context/ConfigContext';
 
@@ -50,6 +51,7 @@ function App() {
     { id: 'sickleave', label: 'Incapacidad', icon: <CalendarClock size={20} /> },
     { id: 'travel', label: 'Cert. Viaje', icon: <Plane size={20} /> },
     { id: 'referral', label: 'Remisiones', icon: <Send size={20} /> },
+    { id: 'surgical-description', label: 'Descrip. Quir.', icon: <ActivitySquare size={20} /> },
     { id: 'proposal', label: 'Presupuesto', icon: <Wallet size={20} /> },
     { id: 'surgery-results', label: '📸 Resultados', icon: <ImageIcon size={20} /> },
     { id: 'sales-tools', label: 'Herramientas Vtas', icon: <FolderOpen size={20} /> },
@@ -76,6 +78,8 @@ function App() {
         return <TravelCertificate patient={patient} />;
       case 'referral':
         return <Referral patient={patient} />;
+      case 'surgical-description':
+        return <SurgicalDescription patient={patient} />;
       case 'proposal':
         return <EconomicProposal patient={patient} />;
       case 'surgery-results':
