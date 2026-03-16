@@ -158,7 +158,9 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (data.rethus) setRethus(data.rethus);
                 if (data.address) setAddress(data.address);
                 if (data.contact_phone) setContactPhone(data.contact_phone);
-                if (data.website_url) setWebsiteUrl(data.website_url);
+                if (data.website_url) {
+                    setWebsiteUrl(data.website_url === 'www.drgiovannifuentes.com' ? 'www.drgio440.com' : data.website_url);
+                }
                 if (data.medications?.length) setMedications(data.medications);
                 if (data.labs?.length) setLabs(data.labs);
                 if (data.imaging?.length) setImaging(data.imaging);
@@ -200,7 +202,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 if (parsed.rethus) setRethus(parsed.rethus);
                 if (parsed.address) setAddress(parsed.address);
                 if (parsed.contactPhone) setContactPhone(parsed.contactPhone);
-                if (parsed.websiteUrl) setWebsiteUrl(parsed.websiteUrl);
+                if (parsed.websiteUrl) setWebsiteUrl(parsed.websiteUrl === 'www.drgiovannifuentes.com' ? 'www.drgio440.com' : parsed.websiteUrl);
                 if (parsed.medications) setMedications(parsed.medications);
                 if (parsed.labs) setLabs(parsed.labs);
                 if (parsed.imaging) setImaging(parsed.imaging);
