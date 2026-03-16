@@ -255,7 +255,7 @@ const ContactConfig: React.FC = () => {
                     </div>
                     <div className="form-group" style={{ flex: 1 }}>
                         <label className="form-label">Sitio Web</label>
-                        <input className="form-input" value={web} onChange={e => setWeb(e.target.value)} placeholder="Ej: www.drgiovannifuentes.com" />
+                        <input className="form-input" value={web} onChange={e => setWeb(e.target.value)} placeholder="Ej: www.drgio440.com" />
                     </div>
                 </div>
 

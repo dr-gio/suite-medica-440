@@ -25,7 +25,7 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
             `Estimado/a ${patient.name || 'paciente'},\n\n` +
             `Le enviamos su *${documentTitle}* generado el ${date} en 440 Clinic.\n\n` +
             `_${doctorName || 'Dr. Giovanni Fuentes'}_\n_Cirujano Plástico Estético y Reconstructivo_\n_RETHUS: ${rethus || 'CMC2017-222322'}_\n` +
-            `📞 +57 ${contactPhone || '3181800130'}\n🌐 ${websiteUrl || 'www.drgiovannifuentes.com'}`
+            `📞 +57 ${contactPhone || '3181800130'}\n🌐 ${websiteUrl || 'www.drgio440.com'}`
         );
     };
 

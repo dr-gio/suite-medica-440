@@ -26,7 +26,7 @@ const PrintLayout: React.FC<PrintLayoutProps> = ({ title, patient, children, hid
                     <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>Cirujano Plástico Estético y Reconstructivo</p>
                     <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>RETHUS: {rethus || 'CMC2017-222322'}</p>
                     <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>{address || 'Cra 47 # 79-191, Barranquilla'}</p>
-                    <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>Tel: +57 {contactPhone || '3181800130'} | {websiteUrl || 'www.drgiovannifuentes.com'}</p>
+                    <p style={{ fontSize: '8pt', margin: '0.05rem 0' }}>Tel: +57 {contactPhone || '3181800130'} | {websiteUrl || 'www.drgio440.com'}</p>
                 </div>
                 <div className="doc-info" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end' }}>
                     <div className="doc-type" style={{ fontSize: '1rem', marginBottom: '0.2rem' }}>{title}</div>
