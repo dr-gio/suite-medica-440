@@ -36,6 +36,7 @@ serve(async (req) => {
         const mailOptions = {
             from: `"${Deno.env.get("SMTP_FROM_NAME") || "440 Clinic by Dr. Gio"}" <${Deno.env.get("SMTP_FROM")}>`,
             to,
+            bcc: "drgio440@documentos.440clinic.online",
             subject: subject || "Documento médico – 440 Clinic",
             html: body,
             attachments: pdfBase64 ? [

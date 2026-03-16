@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import PrintLayout from './PrintLayout';
-import { Download, Printer, Loader2, Plane, CalendarDays } from 'lucide-react';
+import { Download, Printer, Loader2, Plane, Share2 } from 'lucide-react';
 import { usePDF } from '../hooks/usePDF';
+import SharePanel from './SharePanel';
 
 interface ProviderService {
     name: string;
@@ -145,6 +146,7 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
     const [checkOutDate, setCheckOutDate] = useState<string>('');
     const [hasCompanion, setHasCompanion] = useState<boolean>(false);
     const [companionRate, setCompanionRate] = useState<number | string>(0);
+    const [showSharePanel, setShowSharePanel] = useState<boolean>(false);
 
     const formatCurrency = (val: number) => currency === 'COP' ? formatCOP(val) : formatUSD(val);
 
@@ -176,13 +178,11 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             <div className="builder-layout no-print" style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(300px, 1fr) 2fr',
-                gap: '2rem',
+                maxWidth: '650px',
+                margin: '0 auto',
                 padding: '1.5rem',
                 backgroundColor: '#f8fafc',
                 minHeight: 'calc(100vh - 70px)',
-                alignItems: 'start'
             }}>
                 {/* Column Left: Controls */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -256,12 +256,13 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
                             </div>
                         </div>
 
-                        <div className="form-row mb-4">
+                        <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div className="form-group">
                                 <label className="form-label">Fecha Llegada</label>
                                 <input
                                     type="date"
                                     className="form-input"
+                                    style={{ width: '100%' }}
                                     value={checkInDate}
                                     onChange={(e) => setCheckInDate(e.target.value)}
                                 />
@@ -271,6 +272,7 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
                                 <input
                                     type="date"
                                     className="form-input"
+                                    style={{ width: '100%' }}
                                     value={checkOutDate}
                                     onChange={(e) => setCheckOutDate(e.target.value)}
                                 />
@@ -324,6 +326,19 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.5rem' }}>
                             <button
+                                className="action-btn"
+                                onClick={() => setShowSharePanel(true)}
+                                style={{
+                                    width: '100%', justifyContent: 'center', padding: '0.85rem',
+                                    borderRadius: '10px', fontSize: '1rem',
+                                    backgroundColor: '#10b981', color: 'white',
+                                    border: 'none', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                                    marginBottom: '0.5rem'
+                                }}
+                            >
+                                <Share2 size={20} /> Compartir / Enviar
+                            </button>
+                            <button
                                 className="action-btn primary"
                                 onClick={handleDownloadPDF}
                                 disabled={downloading}
@@ -342,29 +357,14 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
                         </div>
                     </div>
                 </div>
-
-                {/* Column Right: Preview */}
-                <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Resumen del Paquete</h3>
-                    </div>
-
-                    <div style={{ padding: '1.5rem' }}>
-                        <h2 style={{ fontSize: '1.5rem', color: '#1e293b', marginBottom: '0.5rem' }}>{selectedProvider.name}</h2>
-                        <p style={{ color: '#64748b', fontStyle: 'italic', marginBottom: '1.5rem' }}>{selectedProvider.motto}</p>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-                            {selectedProvider.services.map((service, idx) => (
-                                <div key={idx} style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <div style={{ fontWeight: 600, color: '#334155', fontSize: '0.95rem' }}>{service.name}</div>
-                                    <div style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                        <CalendarDays size={14} /> {service.time}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                {/* Include SharePanel */}
+                {showSharePanel && (
+                    <SharePanel
+                        patient={patient}
+                        documentTitle="Cotización de Estadía"
+                        onClose={() => setShowSharePanel(false)}
+                    />
+                )}
             </div>
 
             {/* Print Layout */}
