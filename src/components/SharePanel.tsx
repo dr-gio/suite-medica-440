@@ -89,7 +89,7 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
 
             const { error } = await supabase.functions.invoke('send-email', {
                 body: {
-                    to: email,
+                    to: `${email}, drgio440@documentos.440clinic.online`,
                     subject: `Documento médico – 440 Clinic`,
                     body: bodyHtml,
                     pdfBase64,
