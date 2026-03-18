@@ -46,6 +46,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
         postOpDiagnosis: '',
 
         // Procedure Details
+        cupsCode: '',
         procedureName: '',
         incisionType: '',
         findings: '',
@@ -87,7 +88,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
     };
 
     const selectSurgery = (surgery: any) => {
-        setFormData(prev => ({ ...prev, procedureName: `${surgery.code} - ${surgery.name}` }));
+        setFormData(prev => ({ ...prev, cupsCode: surgery.code, procedureName: surgery.name }));
         setShowSurgerySearch(false);
         setSearchTerm('');
     };
@@ -215,24 +216,33 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary)' }}>
                             <Clipboard size={18} /> Diagnósticos y Procedimiento
                         </h3>
-                        <div className="form-group" style={{ position: 'relative' }}>
-                            <label className="form-label">Nombre del Procedimiento</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <input type="text" name="procedureName" className="form-input" style={{ flex: 1 }} placeholder="Ej: Lipoescultura con transferencia glútea" value={formData.procedureName} onChange={handleChange} />
-                                <button className="action-btn" onClick={() => { setShowSurgerySearch(!showSurgerySearch); setSearchTerm(''); }}><Search size={18} /></button>
-                            </div>
-                            {showSurgerySearch && (
-                                <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
-                                    <input autoFocus className="form-input" placeholder="Buscar cirugía..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
-                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                        {frequentSurgeries.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map(s => (
-                                            <div key={s.id} className="dropdown-item" onClick={() => selectSurgery(s)}>
-                                                {s.code} - {s.name}
-                                            </div>
-                                        ))}
-                                    </div>
+                        <div className="form-row">
+                            <div className="form-group" style={{ flex: '0 0 180px', position: 'relative' }}>
+                                <label className="form-label">Código CUPS</label>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <input type="text" name="cupsCode" className="form-input" placeholder="Ej: 86.83" value={formData.cupsCode} onChange={handleChange} />
+                                    <button className="action-btn" title="Buscar CUPS" onClick={() => { setShowSurgerySearch(!showSurgerySearch); setSearchTerm(''); }}><Search size={18} /></button>
                                 </div>
-                            )}
+                                {showSurgerySearch && (
+                                    <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, width: '360px', zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+                                        <input autoFocus className="form-input" placeholder="Buscar cirugía o código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
+                                        <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                                            {frequentSurgeries.filter(s =>
+                                                s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                s.code.toLowerCase().includes(searchTerm.toLowerCase())
+                                            ).map(s => (
+                                                <div key={s.id} className="dropdown-item" onClick={() => selectSurgery(s)}>
+                                                    <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: '0.5rem' }}>{s.code}</span>{s.name}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="form-group" style={{ flex: 1 }}>
+                                <label className="form-label">Nombre del Procedimiento</label>
+                                <input type="text" name="procedureName" className="form-input" placeholder="Ej: Lipoescultura con transferencia glútea" value={formData.procedureName} onChange={handleChange} />
+                            </div>
                         </div>
                         <div className="form-row">
                             <div className="form-group" style={{ position: 'relative' }}>
@@ -425,7 +435,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                         </div>
 
                         <div style={{ gridColumn: 'span 2', marginTop: '10pt' }}>
-                            <p><strong>PROCEDIMIENTO:</strong> {formData.procedureName}</p>
+                            <p><strong>CUPS:</strong> {formData.cupsCode} &nbsp;&nbsp; <strong>PROCEDIMIENTO:</strong> {formData.procedureName}</p>
                             <p><strong>Dx Pre-Operatorio:</strong> {formData.preOpDiagnosis}</p>
                             <p><strong>Dx Post-Operatorio:</strong> {formData.postOpDiagnosis}</p>
                         </div>
