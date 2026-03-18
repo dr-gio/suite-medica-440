@@ -5,6 +5,7 @@ import { getStoredPin, setStoredPin } from './PinLock';
 import { supabase } from '../lib/supabase';
 import KnowledgeBaseEditor from './KnowledgeBaseEditor';
 import { DEFAULT_CUPS, DEFAULT_DIAGNOSES } from '../data/cupscie10440';
+import { DEFAULT_SURGICAL_TEMPLATES } from '../data/surgicalTemplates440';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('general');
@@ -957,11 +958,21 @@ const SurgicalTemplatesConfig: React.FC = () => {
 
     const handleSave = () => updateCatalog('surgicalTemplates', items);
 
+    const loadBase440 = () => {
+        if (items.length > 0 && !window.confirm('¿Reemplazar las plantillas actuales con las 17 plantillas de 440 Clinic? Se perderán los cambios sin guardar.')) return;
+        setItems(DEFAULT_SURGICAL_TEMPLATES);
+    };
+
     return (
         <div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
                 Crea plantillas para las técnicas quirúrgicas que más utilizas. Podrás cargarlas automáticamente al llenar una descripción.
             </p>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <button className="action-btn" onClick={loadBase440} style={{ background: 'linear-gradient(135deg, var(--primary), #4f46e5)', color: 'white', border: 'none' }}>
+                    <Upload size={16} /> Cargar plantillas base 440 Clinic (17 procedimientos)
+                </button>
+            </div>
             {items.map((m, i) => (
                 <div key={m.id} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
