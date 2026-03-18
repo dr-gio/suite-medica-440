@@ -138,8 +138,8 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                             <BookOpen size={18} /> Cargar Plantilla
                         </button>
                         {showTemplates && (
-                            <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: '110%', width: '300px', zIndex: 100, background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', border: '1px solid var(--border-color)', padding: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
-                                <div style={{ padding: '0.5rem', fontWeight: 600, borderBottom: '1px solid #eee', marginBottom: '0.5rem' }}>Tus Plantillas</div>
+                            <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: '110%', width: '300px', zIndex: 100, background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', border: '1px solid var(--border-color)', padding: '0.5rem', maxHeight: '400px', overflowY: 'auto', color: '#111827' }}>
+                                <div style={{ padding: '0.5rem', fontWeight: 600, borderBottom: '1px solid #eee', marginBottom: '0.5rem', color: '#111827' }}>Tus Plantillas</div>
                                 {surgicalTemplates.length === 0 ? (
                                     <p style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>No hay plantillas configuradas.</p>
                                 ) : (
@@ -231,7 +231,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                                                 s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                                 s.code.toLowerCase().includes(searchTerm.toLowerCase())
                                             ).map(s => (
-                                                <div key={s.id} className="dropdown-item" onClick={() => selectSurgery(s)}>
+                                                <div key={s.id} className="dropdown-item" onClick={() => selectSurgery(s)} style={{ color: '#111827' }}>
                                                     <span style={{ fontWeight: 700, color: 'var(--primary)', marginRight: '0.5rem' }}>{s.code}</span>{s.name}
                                                 </div>
                                             ))}
@@ -256,7 +256,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                                         <input autoFocus className="form-input" placeholder="Buscar diagnóstico..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
                                         <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                             {frequentDiagnoses.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.code.toLowerCase().includes(searchTerm.toLowerCase())).map(d => (
-                                                <div key={d.id} className="dropdown-item" onClick={() => selectDiagnosis(d, 'pre')}>
+                                                <div key={d.id} className="dropdown-item" onClick={() => selectDiagnosis(d, 'pre')} style={{ color: '#111827' }}>
                                                     {d.code} - {d.name}
                                                 </div>
                                             ))}
@@ -275,7 +275,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                                         <input autoFocus className="form-input" placeholder="Buscar diagnóstico..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
                                         <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                             {frequentDiagnoses.filter(d => d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.code.toLowerCase().includes(searchTerm.toLowerCase())).map(d => (
-                                                <div key={d.id} className="dropdown-item" onClick={() => selectDiagnosis(d, 'post')}>
+                                                <div key={d.id} className="dropdown-item" onClick={() => selectDiagnosis(d, 'post')} style={{ color: '#111827' }}>
                                                     {d.code} - {d.name}
                                                 </div>
                                             ))}
@@ -389,6 +389,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                     font-size: 0.9rem;
                     cursor: pointer;
                     transition: all 0.2s;
+                    color: #111827;
                 }
                 .dropdown-item:hover {
                     background-color: var(--primary-light);
