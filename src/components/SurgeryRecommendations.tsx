@@ -10,14 +10,15 @@ interface Props {
 
 const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
     const { surgeries } = useConfig();
-    const printRef = useRef<HTMLDivElement>(null);
+    const preRef = useRef<HTMLDivElement>(null);
+    const postRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
     const [surgery, setSurgery] = useState('');
     const [preText, setPreText] = useState('');
     const [postText, setPostText] = useState('');
-    const [type, setType] = useState('Ambas'); // Ambas, Preoperatorias, Postoperatorias
+    const [activeTab, setActiveTab] = useState<'pre' | 'post'>('pre');
+    const [downloadingPost, setDownloadingPost] = useState(false);
 
-    // Load template when surgery selected
     useEffect(() => {
         const match = surgeries.find(s => s.name === surgery);
         if (match) {
@@ -29,52 +30,78 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
         }
     }, [surgery, surgeries]);
 
-    const handleDownload = () => {
-        if (printRef.current) {
-            downloadPDF(printRef.current, `Recomendaciones_${surgery || 'Cirugia'}.pdf`);
+    const handleDownloadPre = () => {
+        if (preRef.current) {
+            downloadPDF(preRef.current, `Pre-Quirurgicas_${surgery || 'Cirugia'}.pdf`);
         }
     };
+
+    const handleDownloadPost = async () => {
+        if (postRef.current) {
+            setDownloadingPost(true);
+            await downloadPDF(postRef.current, `Post-Quirurgicas_${surgery || 'Cirugia'}.pdf`);
+            setDownloadingPost(false);
+        }
+    };
+
+    const tabStyle = (active: boolean): React.CSSProperties => ({
+        flex: 1,
+        padding: '0.75rem 1rem',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontWeight: 600,
+        fontSize: '0.95rem',
+        transition: 'all 0.2s',
+        background: active ? 'var(--primary)' : 'transparent',
+        color: active ? 'white' : 'var(--text-muted)',
+    });
 
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Recomendaciones Pre y Post Quirúrgicas</h2>
-                    <button
-                        className="action-btn primary"
-                        onClick={handleDownload}
-                        disabled={downloading}
-                        style={{ borderRadius: '8px', padding: '0.6rem 1rem' }}
-                    >
-                        {downloading ? <Loader2 size={18} className="spin" /> : <Download size={18} />}
-                        <span>{downloading ? 'Generando...' : 'Descargar PDF'}</span>
+                <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>
+                    Recomendaciones Quirúrgicas
+                </h2>
+
+                {/* Procedure selector */}
+                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label">Procedimiento Quirúrgico (Plantilla Rápida)</label>
+                    <select className="form-input" value={surgery} onChange={(e) => setSurgery(e.target.value)}>
+                        <option value="">-- Seleccionar Procedimiento --</option>
+                        {surgeries.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                        <option value="custom">-- Otro (Personalizado) --</option>
+                    </select>
+                </div>
+
+                {/* Tabs */}
+                <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--card-bg)', borderRadius: '10px', padding: '4px', marginBottom: '1.5rem' }}>
+                    <button style={tabStyle(activeTab === 'pre')} onClick={() => setActiveTab('pre')}>
+                        📋 Pre-Quirúrgicas
+                    </button>
+                    <button style={tabStyle(activeTab === 'post')} onClick={() => setActiveTab('post')}>
+                        📋 Post-Quirúrgicas
                     </button>
                 </div>
 
-                <div className="form-row">
-                    <div className="form-group" style={{ flex: 2 }}>
-                        <label className="form-label">Procedimiento Quirúrgico (Plantilla Rápida)</label>
-                        <select className="form-input" value={surgery} onChange={(e) => setSurgery(e.target.value)}>
-                            <option value="">-- Seleccionar Procedimiento --</option>
-                            {surgeries.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                            <option value="custom">-- Otro (Personalizado) --</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">Tipo de Recomendación</label>
-                        <select className="form-input" value={type} onChange={(e) => setType(e.target.value)}>
-                            <option value="Ambas">Pre y Postoperatorias</option>
-                            <option value="Preoperatorias">Solo Preoperatorias</option>
-                            <option value="Postoperatorias">Solo Postoperatorias</option>
-                        </select>
-                    </div>
-                </div>
-
-                {(type === 'Ambas' || type === 'Preoperatorias') && (
-                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                        <label className="form-label">Instrucciones Preoperatorias</label>
+                {/* Pre tab */}
+                {activeTab === 'pre' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                            <label className="form-label" style={{ margin: 0 }}>Instrucciones Preoperatorias</label>
+                            <button
+                                className="action-btn primary"
+                                onClick={handleDownloadPre}
+                                disabled={downloading}
+                                style={{ borderRadius: '8px', padding: '0.6rem 1rem' }}
+                            >
+                                {downloading ? <Loader2 size={18} className="spin" /> : <Download size={18} />}
+                                <span>{downloading ? 'Generando...' : 'Descargar PDF Pre-Op'}</span>
+                            </button>
+                        </div>
                         <textarea
                             className="form-input"
+                            style={{ minHeight: '220px' }}
                             value={preText}
                             onChange={(e) => setPreText(e.target.value)}
                             placeholder="Indíquele al paciente qué debe hacer antes de la operación..."
@@ -82,12 +109,24 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
                     </div>
                 )}
 
-                {(type === 'Ambas' || type === 'Postoperatorias') && (
-                    <div className="form-group">
-                        <label className="form-label">Instrucciones Postoperatorias</label>
+                {/* Post tab */}
+                {activeTab === 'post' && (
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                            <label className="form-label" style={{ margin: 0 }}>Instrucciones Postoperatorias</label>
+                            <button
+                                className="action-btn primary"
+                                onClick={handleDownloadPost}
+                                disabled={downloadingPost}
+                                style={{ borderRadius: '8px', padding: '0.6rem 1rem' }}
+                            >
+                                {downloadingPost ? <Loader2 size={18} className="spin" /> : <Download size={18} />}
+                                <span>{downloadingPost ? 'Generando...' : 'Descargar PDF Post-Op'}</span>
+                            </button>
+                        </div>
                         <textarea
                             className="form-input"
-                            style={{ minHeight: '150px' }}
+                            style={{ minHeight: '220px' }}
                             value={postText}
                             onChange={(e) => setPostText(e.target.value)}
                             placeholder="Escriba los cuidados posteriores a la cirugía..."
@@ -96,37 +135,50 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
                 )}
             </div>
 
-            <div ref={printRef} className="print-only">
-                <PrintLayout patient={patient} title={`RECOMENDACIONES: ${surgery.toUpperCase() || 'PROCEDIMIENTOS'}`}>
+            {/* Hidden print area - Pre */}
+            <div ref={preRef} className="print-only">
+                <PrintLayout patient={patient} title={`PRE-QUIRÚRGICAS: ${surgery.toUpperCase() || 'PROCEDIMIENTO'}`}>
                     <div style={{ lineHeight: '1.5', marginTop: '0.5rem', color: '#1f2937', fontSize: '10pt' }}>
-                        {preText && (type === 'Ambas' || type === 'Preoperatorias') && (
-                            <div className="recommendations-section" style={{ marginBottom: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem', backgroundColor: '#f8fafc' }}>
-                                <h3 style={{ fontSize: '11pt', marginBottom: '0.75rem', color: '#2563eb', fontWeight: 700, borderBottom: '1px solid #bfdbfe', paddingBottom: '0.25rem' }}>INSTRUCCIONES PREOPERATORIAS</h3>
+                        {preText ? (
+                            <div style={{ border: '1px solid #bfdbfe', borderRadius: '8px', padding: '1rem', backgroundColor: '#eff6ff' }}>
+                                <h3 style={{ fontSize: '11pt', marginBottom: '0.75rem', color: '#2563eb', fontWeight: 700, borderBottom: '1px solid #bfdbfe', paddingBottom: '0.25rem' }}>
+                                    INSTRUCCIONES PREOPERATORIAS
+                                </h3>
                                 <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: '#1f2937' }}>
                                     {preText.split('\n').filter(line => line.trim()).map((line, i) => (
                                         <li key={i} style={{ marginBottom: '0.5rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
                                     ))}
                                 </ul>
                             </div>
+                        ) : (
+                            <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '2rem' }}>No hay instrucciones preoperatorias.</p>
                         )}
+                    </div>
+                </PrintLayout>
+            </div>
 
-                        {postText && (type === 'Ambas' || type === 'Postoperatorias') && (
-                            <div className="recommendations-section" style={{ marginBottom: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1rem' }}>
-                                <h3 style={{ fontSize: '11pt', marginBottom: '0.75rem', color: '#10b981', fontWeight: 700, borderBottom: '1px solid #a7f3d0', paddingBottom: '0.25rem' }}>INSTRUCCIONES POSTOPERATORIAS</h3>
+            {/* Hidden print area - Post */}
+            <div ref={postRef} className="print-only">
+                <PrintLayout patient={patient} title={`POST-QUIRÚRGICAS: ${surgery.toUpperCase() || 'PROCEDIMIENTO'}`}>
+                    <div style={{ lineHeight: '1.5', marginTop: '0.5rem', color: '#1f2937', fontSize: '10pt' }}>
+                        {postText ? (
+                            <div style={{ border: '1px solid #a7f3d0', borderRadius: '8px', padding: '1rem', backgroundColor: '#f0fdf4' }}>
+                                <h3 style={{ fontSize: '11pt', marginBottom: '0.75rem', color: '#10b981', fontWeight: 700, borderBottom: '1px solid #a7f3d0', paddingBottom: '0.25rem' }}>
+                                    INSTRUCCIONES POSTOPERATORIAS
+                                </h3>
                                 <ul style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', color: '#1f2937' }}>
                                     {postText.split('\n').filter(line => line.trim()).map((line, i) => (
                                         <li key={i} style={{ marginBottom: '0.5rem' }}>{line.replace(/^\d+\.\s*/, '')}</li>
                                     ))}
                                 </ul>
                             </div>
-                        )}
-
-                        {!preText && !postText && (
-                            <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '2rem' }}>No hay recomendaciones redactadas todavía.</p>
+                        ) : (
+                            <p style={{ textAlign: 'center', color: '#9ca3af', marginTop: '2rem' }}>No hay instrucciones postoperatorias.</p>
                         )}
                     </div>
                 </PrintLayout>
             </div>
+
             <style>{`
                 .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
