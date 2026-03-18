@@ -4,6 +4,7 @@ import { Plus, X, Save, ShieldCheck, Loader2, ToggleLeft, ToggleRight, Trash2, F
 import { getStoredPin, setStoredPin } from './PinLock';
 import { supabase } from '../lib/supabase';
 import KnowledgeBaseEditor from './KnowledgeBaseEditor';
+import { DEFAULT_CUPS, DEFAULT_DIAGNOSES } from '../data/cupscie10440';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('general');
@@ -996,11 +997,21 @@ const DiagnosesConfig: React.FC = () => {
 
     const handleSave = () => updateCatalog('frequentDiagnoses', items);
 
+    const loadBase440 = () => {
+        if (items.length > 0 && !window.confirm('¿Reemplazar el catálogo actual con la base CIE-10 de 440 Clinic? Se perderán los cambios sin guardar.')) return;
+        setItems(DEFAULT_DIAGNOSES);
+    };
+
     return (
         <div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
                 Define tus diagnósticos más frecuentes para agilizar el llenado de historias clínicas.
             </p>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <button className="action-btn" onClick={loadBase440} style={{ background: 'linear-gradient(135deg, var(--primary), #4f46e5)', color: 'white', border: 'none' }}>
+                    <Upload size={16} /> Cargar base CIE-10 — 440 Clinic (46 diagnósticos)
+                </button>
+            </div>
             {items.map((m, i) => (
                 <div key={m.id} className="item-card" style={{ marginBottom: '1rem', gap: '1rem' }}>
                     <input className="form-input" style={{ width: '100px' }} placeholder="CIE-10" value={m.code} onChange={(e) => updateItem(i, 'code', e.target.value)} />
@@ -1030,11 +1041,21 @@ const CUPSConfig: React.FC = () => {
 
     const handleSave = () => updateCatalog('frequentSurgeries', items);
 
+    const loadBase440 = () => {
+        if (items.length > 0 && !window.confirm('¿Reemplazar el catálogo actual con los CUPS de 440 Clinic? Se perderán los cambios sin guardar.')) return;
+        setItems(DEFAULT_CUPS);
+    };
+
     return (
         <div>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
                 Define tus cirugías (CUPS) más frecuentes para agilizar el llenado del acto quirúrgico.
             </p>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <button className="action-btn" onClick={loadBase440} style={{ background: 'linear-gradient(135deg, var(--primary), #4f46e5)', color: 'white', border: 'none' }}>
+                    <Upload size={16} /> Cargar base CUPS — 440 Clinic (17 procedimientos)
+                </button>
+            </div>
             {items.map((m, i) => (
                 <div key={m.id} className="item-card" style={{ marginBottom: '1rem', gap: '1rem' }}>
                     <input className="form-input" style={{ width: '120px' }} placeholder="CUPS" value={m.code} onChange={(e) => updateItem(i, 'code', e.target.value)} />
