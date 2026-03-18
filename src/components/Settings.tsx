@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import KnowledgeBaseEditor from './KnowledgeBaseEditor';
 import { DEFAULT_CUPS, DEFAULT_DIAGNOSES } from '../data/cupscie10440';
 import { DEFAULT_SURGICAL_TEMPLATES } from '../data/surgicalTemplates440';
+import { DEFAULT_RECOMMENDATIONS } from '../data/recommendations440';
 
 const Settings: React.FC = () => {
     const [activeTab, setActiveTab] = useState('general');
@@ -427,9 +428,19 @@ const SurgeryConfig: React.FC = () => {
     };
     const removeItem = (index: number) => setItems(items.filter((_, i) => i !== index));
     const handleSave = () => updateCatalog('surgeries', items);
+    const loadBase440 = () => {
+        const base = DEFAULT_RECOMMENDATIONS.map((r, i) => ({ id: `rec440_${i}`, ...r }));
+        setItems(base);
+    };
 
     return (
         <div>
+            <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', background: 'var(--card-bg)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Carga las recomendaciones pre y post quirúrgicas de 440 Clinic (11 procedimientos)</span>
+                <button className="action-btn" onClick={loadBase440} style={{ background: 'linear-gradient(135deg, var(--primary), #4f46e5)', color: 'white', border: 'none' }}>
+                    <Upload size={16} /> Cargar base 440 Clinic (11 procedimientos)
+                </button>
+            </div>
             {items.map((m, i) => (
                 <div key={m.id} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
