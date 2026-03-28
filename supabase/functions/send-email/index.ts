@@ -32,7 +32,7 @@ serve(async (req: Request) => {
         const smtpPass = Deno.env.get("SMTP_PASS") || Deno.env.get("SMPT_PASS");
         const smtpSecure = Deno.env.get("SMTP_SECURE") || Deno.env.get("SMPT_SECURE");
         const smtpFromName = Deno.env.get("SMTP_FROM_NAME") || Deno.env.get("SMPT_FROM_NAME") || "440 Clinic by Dr. Gio";
-        const smtpFrom = Deno.env.get("SMTP_FROM") || Deno.env.get("SMPT_FROM");
+        const smtpFrom = Deno.env.get("SMTP_FROM") || Deno.env.get("SMPT_FROM") || "drgio440@documentos.440clinic.online";
 
         const transporter = nodemailer.createTransport({
             host: smtpHost,
