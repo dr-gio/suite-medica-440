@@ -169,7 +169,8 @@ const KnowledgeBaseEditor: React.FC = () => {
                                 WebkitLineClamp: 3,
                                 WebkitBoxOrient: 'vertical',
                                 overflow: 'hidden',
-                                textOverflow: 'ellipsis'
+                                textOverflow: 'ellipsis',
+                                wordBreak: 'break-word'
                             }}>
                                 {item.content}
                             </p>

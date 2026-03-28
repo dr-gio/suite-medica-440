@@ -12,26 +12,31 @@ const Imaging: React.FC<Props> = ({ patient }) => {
     const { imaging: catalogImaging } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
-    const [studies, setStudies] = useState([
-        { name: '', reason: '', format: 'Digital o Impreso' }
-    ]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [studies, setStudies] = useState<any[]>([]);
     const [dx, setDx] = useState('');
 
-    const addStudy = () => setStudies([...studies, { name: '', reason: '', format: 'Digital o Impreso' }]);
+    const filteredCatalog = catalogImaging.filter(s => 
+        s.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const addStudyFromCatalog = (catalogStudy: any) => {
+        setStudies([...studies, { 
+            name: catalogStudy.name, 
+            reason: catalogStudy.reason, 
+            format: catalogStudy.format || 'Digital o Impreso' 
+        }]);
+    };
+
+    const addCustomStudy = () => {
+        setStudies([...studies, { name: '', reason: '', format: 'Digital o Impreso' }]);
+    };
+
     const removeStudy = (index: number) => setStudies(studies.filter((_, i) => i !== index));
 
     const updateStudy = (index: number, field: string, value: string) => {
         const newStudies = [...studies];
         newStudies[index] = { ...newStudies[index], [field]: value };
-
-        if (field === 'name') {
-            const match = catalogImaging.find(l => l.name === value);
-            if (match) {
-                if (!newStudies[index].reason) newStudies[index].reason = match.reason;
-                if (match.format) newStudies[index].format = match.format;
-            }
-        }
-
         setStudies(newStudies);
     };
 
@@ -43,8 +48,8 @@ const Imaging: React.FC<Props> = ({ patient }) => {
 
     return (
         <div className="tool-view">
-            <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div className="form-section no-print" style={{ flex: 1, border: 'none', padding: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Imágenes Diagnósticas</h2>
                     <button
                         className="action-btn primary"
@@ -57,51 +62,125 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                     </button>
                 </div>
 
-                <datalist id="imaging-list">
-                    {catalogImaging.map(l => <option key={l.id} value={l.name} />)}
-                </datalist>
-
-                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <div className="form-group" style={{ marginBottom: '1.5rem', padding: '0 1rem' }}>
                     <label className="form-label">Diagnóstico Clínico / Justificación Médica</label>
                     <input className="form-input" placeholder="Ej: Dolor abdominal en estudio" value={dx} onChange={(e) => setDx(e.target.value)} />
                 </div>
 
-                {studies.map((study, index) => (
-                    <div key={index} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1rem', borderLeft: '4px solid var(--primary-light)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>Estudio #{index + 1}</span>
-                            <button className="remove-btn" onClick={() => removeStudy(index)}><X size={18} /></button>
+                <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '1.5rem', height: 'calc(100vh - 300px)' }}>
+                    {/* Selection Sidebar */}
+                    <div style={{ background: 'var(--bg-main)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+                            <label className="form-label">Buscar Estudio</label>
+                            <input 
+                                className="form-input" 
+                                placeholder="Ej: Ecografía..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-
-                        <div className="form-row" style={{ marginBottom: 0 }}>
-                            <div className="form-group" style={{ flex: 2 }}>
-                                <label className="form-label">Nombre del Estudio / Región Anatómica</label>
-                                <input className="form-input" list="imaging-list" placeholder="Ej: Ecografía Abdominal Total" value={study.name} onChange={(e) => updateStudy(index, 'name', e.target.value)} />
-                            </div>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
+                            {filteredCatalog.length > 0 ? (
+                                filteredCatalog.map((s) => (
+                                    <div 
+                                        key={s.id} 
+                                        className="item-card" 
+                                        style={{ 
+                                            padding: '0.75rem', 
+                                            marginBottom: '0.5rem', 
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            border: '1px solid transparent'
+                                        }}
+                                        onClick={() => addStudyFromCatalog(s)}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                            <div>
+                                                <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>{s.name}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.reason}</div>
+                                            </div>
+                                            <Plus size={16} color="var(--primary)" />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                    No se encontraron estudios.
+                                </div>
+                            )}
                         </div>
-
-                        <div className="form-row" style={{ marginBottom: 0 }}>
-                            <div className="form-group" style={{ flex: 2 }}>
-                                <label className="form-label">Indicación Médica</label>
-                                <input className="form-input" placeholder="Ej: Descartar litiasis" value={study.reason} onChange={(e) => updateStudy(index, 'reason', e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Formato Deseado</label>
-                                <select className="form-input" value={study.format} onChange={(e) => updateStudy(index, 'format', e.target.value)}>
-                                    <option>Digital o Impreso</option>
-                                    <option>Solo Cd / Digital</option>
-                                    <option>Placas Impresas</option>
-                                </select>
-                            </div>
-                        </div>
+                        <button 
+                            className="action-btn" 
+                            onClick={addCustomStudy}
+                            style={{ margin: '1rem', justifyContent: 'center', borderStyle: 'dashed' }}
+                        >
+                            <Plus size={18} />
+                            Otro / Personalizado
+                        </button>
                     </div>
-                ))}
 
-                <button className="action-btn add-btn" onClick={addStudy} style={{ borderStyle: 'dashed', width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}>
-                    <Plus size={18} />
-                    Agregar Estudio Diagnóstico
-                </button>
+                    {/* Requested List */}
+                    <div className="table-container" style={{ overflowY: 'auto', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 1, borderBottom: '1px solid var(--border-color)' }}>
+                                <tr>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Estudio / Región</th>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Indicación Médica</th>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', width: '180px' }}>Formato</th>
+                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center', width: '50px' }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {studies.map((study, index) => (
+                                    <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '0.5rem 1rem' }}>
+                                            <input 
+                                                className="form-input" 
+                                                style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                value={study.name} 
+                                                onChange={(e) => updateStudy(index, 'name', e.target.value)}
+                                                placeholder="Nombre del estudio..."
+                                            />
+                                        </td>
+                                        <td style={{ padding: '0.5rem 1rem' }}>
+                                            <input 
+                                                className="form-input" 
+                                                style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                value={study.reason} 
+                                                onChange={(e) => updateStudy(index, 'reason', e.target.value)}
+                                                placeholder="Ej: Descartar litiasis"
+                                            />
+                                        </td>
+                                        <td style={{ padding: '0.5rem 1rem' }}>
+                                            <select 
+                                                className="form-input" 
+                                                style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                value={study.format} 
+                                                onChange={(e) => updateStudy(index, 'format', e.target.value)}
+                                            >
+                                                <option>Digital o Impreso</option>
+                                                <option>Solo Cd / Digital</option>
+                                                <option>Placas Impresas</option>
+                                            </select>
+                                        </td>
+                                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center' }}>
+                                            <button className="remove-btn" onClick={() => removeStudy(index)}><X size={16} /></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {studies.length === 0 && (
+                                    <tr>
+                                        <td colSpan={4} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                            Selecciona estudios de la izquierda para solicitarlos.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
 
             <div ref={printRef} className="print-only">
                 <PrintLayout patient={patient} title="Imágenes Diagnósticas">

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet, FolderOpen, FileText, Image as ImageIcon, MapPin } from 'lucide-react';
 import PinLock, { useAutoLock } from './components/PinLock';
@@ -22,15 +23,15 @@ import MedicalTourism from './components/MedicalTourism';
 
 import { useConfig } from './context/ConfigContext';
 
-function App() {
+import ConsentSigningPage from './components/ConsentSigningPage';
+
+function Dashboard() {
   const { logoUrl } = useConfig();
   const { locked, lock } = useAutoLock();
-  // Deployment trigger: Verified author drgio@440clinic.com
   const [activeTab, setActiveTab] = useState('prescriptions');
   const [showShare, setShowShare] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Shared Patient Context
   const [patient, setPatient] = useState({
     name: 'Juan Pérez',
     id: 'CC 1234567890',
@@ -101,158 +102,62 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* PIN Lock Screen */}
       {locked && <PinLock onUnlock={() => { localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString()); window.location.reload(); }} />}
-
-      {/* Mobile Sidebar Overlay */}
-      <div
-        className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
-        onClick={() => setSidebarOpen(false)}
-      ></div>
-
-      {/* Sidebar - hidden when printing */}
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)}></div>
       <aside className={`sidebar no-print ${sidebarOpen ? 'open' : ''}`}>
         <div className="brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '1.5rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1.5rem', gap: '1rem' }}>
-          {logoUrl ? (
-            <img src={logoUrl} alt="Suite Médica Logo" style={{ maxWidth: '200px', maxHeight: '60px', objectFit: 'contain' }} />
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div className="brand-icon">
-                <Stethoscope size={24} />
-              </div>
-              <span>Suite Médica 440</span>
-            </div>
-          )}
+          {logoUrl ? <img src={logoUrl} alt="Logo" style={{ maxWidth: '200px', maxHeight: '60px', objectFit: 'contain' }} /> : <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}><div className="brand-icon"><Stethoscope size={24} /></div><span>Suite Médica 440</span></div>}
         </div>
-
         <nav className="nav-links">
           {navItems.map((item) => (
-            <button
-              key={item.id}
-              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => {
-                setActiveTab(item.id);
-                setSidebarOpen(false);
-              }}
-            >
-              {item.icon}
-              {item.label}
+            <button key={item.id} className={`nav-item ${activeTab === item.id ? 'active' : ''}`} onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}>
+              {item.icon}{item.label}
             </button>
           ))}
         </nav>
-
-        {/* Lock Button */}
         <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid var(--border-color)', marginTop: 'auto' }}>
-          <button
-            onClick={lock}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem',
-              width: '100%', padding: '0.75rem 1rem',
-              borderRadius: '10px', border: '1px solid rgba(239,68,68,0.3)',
-              background: 'rgba(239,68,68,0.06)', color: '#ef4444',
-              cursor: 'pointer', fontWeight: 500, fontSize: '0.88rem',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.16)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; }}
-          >
+          <button onClick={lock} className="lock-btn">
             <Lock size={16} /> Bloquear
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         <header className="header no-print">
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-            <h1>{activeNavLabel}</h1>
-          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}><button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>{sidebarOpen ? <X size={24} /> : <Menu size={24} />}</button><h1>{activeNavLabel}</h1></div>
           <div className="header-actions">
-            <button className="action-btn" onClick={() => setShowShare(true)} style={{ background: 'linear-gradient(135deg,#25d366,#1da851)', color: 'white', border: 'none' }}>
-              <Share2 size={18} />
-              <span>Compartir</span>
-            </button>
-            <button className="action-btn" onClick={handlePrint}>
-              <Printer size={18} />
-              <span>Imprimir / PDF</span>
-            </button>
+            <button className="action-btn share-btn" onClick={() => setShowShare(true)}><Share2 size={18} /><span>Compartir</span></button>
+            <button className="action-btn" onClick={handlePrint}><Printer size={18} /><span>Imprimir / PDF</span></button>
           </div>
         </header>
-
-        {/* Global Patient Information Input Form (Not printed directly, just for entering data) */}
         <div className="content-area">
           <div className="document-container">
             <div className="form-section no-print">
               <h2 className="form-label mb-2">Datos del Paciente</h2>
               <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Nombre Completo</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={patient.name}
-                    onChange={(e) => setPatient({ ...patient, name: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 0.5 }}>
-                  <label className="form-label">Documento</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={patient.id}
-                    onChange={(e) => setPatient({ ...patient, id: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 0.3 }}>
-                  <label className="form-label">Edad</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={patient.age}
-                    onChange={(e) => setPatient({ ...patient, age: e.target.value })}
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 0.5 }}>
-                  <label className="form-label">Fecha</label>
-                  <input
-                    type="date"
-                    className="form-input"
-                    value={patient.date}
-                    onChange={(e) => setPatient({ ...patient, date: e.target.value })}
-                  />
-                </div>
+                <div className="form-group"><label className="form-label">Nombre Completo</label><input className="form-input" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} /></div>
+                <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Documento</label><input className="form-input" value={patient.id} onChange={(e) => setPatient({ ...patient, id: e.target.value })} /></div>
+                <div className="form-group" style={{ flex: 0.3 }}><label className="form-label">Edad</label><input className="form-input" value={patient.age} onChange={(e) => setPatient({ ...patient, age: e.target.value })} /></div>
+                <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Fecha</label><input type="date" className="form-input" value={patient.date} onChange={(e) => setPatient({ ...patient, date: e.target.value })} /></div>
               </div>
             </div>
-
-            {/* Current Selected Tool Interactive Config */}
             {renderContent()}
           </div>
         </div>
       </main>
-      {showShare && activeTab !== 'settings' && (
-        <SharePanel
-          patient={patient}
-          documentTitle={activeNavLabel || 'Documento Médico'}
-          onClose={() => setShowShare(false)}
-        />
-      )}
-
-      {/* AI Assistant Chat */}
+      {showShare && activeTab !== 'settings' && <SharePanel patient={patient} documentTitle={activeNavLabel || 'Documento Médico'} onClose={() => setShowShare(false)} />}
       <AIChat />
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/sign/consent/:token" element={<ConsentSigningPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

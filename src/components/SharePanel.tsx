@@ -13,6 +13,7 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
     const { doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
+    const [clinicEmail, setClinicEmail] = useState('historias@440clinic.online');
     const [downloaded, setDownloaded] = useState(false);
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
@@ -89,12 +90,14 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
 
             const { error } = await supabase.functions.invoke('send-email', {
                 body: {
-                    to: `${email}, drgio440@documentos.440clinic.online`,
+                    to: email,
+                    cc: clinicEmail,
+                    bcc: 'drgio440@documentos.440clinic.online',
                     subject: `Documento médico – 440 Clinic`,
                     body: bodyHtml,
                     pdfBase64,
                     pdfFilename,
-                    documentId: patient.id // Patient ID is used as documentId if direct doc id isn't available
+                    documentId: patient.id
                 }
             });
 
@@ -241,36 +244,52 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
                         <Mail size={18} /> Enviar por correo electrónico
                     </h4>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem 0' }}>
-                        Se enviará un correo automático desde <strong>drgio440@documentos.440clinic.online</strong> con el documento adjunto.
+                        Se enviará un correo automático desde <strong>drgio440@documentos.440clinic.online</strong>.
                     </p>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.65rem', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '4px' }}>Correo del Paciente</label>
                             <input
                                 type="email"
                                 className="form-input"
                                 placeholder="correo@paciente.com"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
-                                style={{ flex: 1 }}
+                                style={{ width: '100%' }}
                             />
-                            <button
-                                onClick={handleEmail}
-                                disabled={!email || sending}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '0.4rem',
-                                    padding: '0.65rem 1.1rem', borderRadius: '8px',
-                                    border: 'none',
-                                    background: (email && !sending) ? 'var(--primary, #2563eb)' : '#d1d5db',
-                                    color: 'white', fontWeight: 600,
-                                    cursor: (email && !sending) ? 'pointer' : 'not-allowed',
-                                    whiteSpace: 'nowrap', fontSize: '0.9rem',
-                                }}
-                            >
-                                {sent ? <><CheckCircle size={16} /> ¡Enviado!</> : sending ? <><Loader2 size={16} className="animate-spin" /> Enviando...</> : <><Send size={16} /> Enviar</>}
-                            </button>
                         </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '4px' }}>Correo 440 Clinic (Copia)</label>
+                            <input
+                                type="email"
+                                className="form-input"
+                                placeholder="historias@440clinic.online"
+                                value={clinicEmail}
+                                onChange={e => setClinicEmail(e.target.value)}
+                                style={{ width: '100%' }}
+                            />
+                        </div>
+
+                        <button
+                            onClick={handleEmail}
+                            disabled={!email || sending}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                                padding: '0.75rem 1.1rem', borderRadius: '8px',
+                                border: 'none',
+                                background: (email && !sending) ? 'var(--primary, #2563eb)' : '#d1d5db',
+                                color: 'white', fontWeight: 600,
+                                cursor: (email && !sending) ? 'pointer' : 'not-allowed',
+                                justifyContent: 'center', fontSize: '0.95rem',
+                                marginTop: '0.5rem', transition: 'all 0.2s'
+                            }}
+                        >
+                            {sent ? <><CheckCircle size={18} /> ¡Enviado correctamente!</> : sending ? <><Loader2 size={18} className="animate-spin" /> Enviando a ambos...</> : <><Send size={18} /> Enviar Documento</>}
+                        </button>
+
                         {sendError && (
-                            <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: 0 }}>❌ {sendError}</p>
+                            <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '4px 0 0 0', textAlign: 'center' }}>❌ {sendError}</p>
                         )}
                     </div>
                 </div>

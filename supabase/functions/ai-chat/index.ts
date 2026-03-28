@@ -20,24 +20,34 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         )
 
-        // 2. Generate Embedding for the query (using OpenAI or similar trough Supabase AI)
-        // NOTE: In a real implementation with Supabase AI, we use their built-in models
-        // OR we call OpenAI API directly. For now, we'll use similarity search on titles/content 
-        // if vectors are not yet fully generated in this demo stage, 
-        // but the SQL supports vector matching.
+        // 2. Fetch full knowledge base from Supabase
+        const { data: kbData, error: kbError } = await supabase
+            .from('suite_config')
+            .select('knowledge_base')
+            .eq('id', 'main')
+            .single();
+        if (kbError) throw kbError;
+        const knowledgeBase = kbData?.knowledge_base ?? [];
 
-        // 3. Perform Search in JSONB knowledge base
-        const { data: documents, error: searchError } = await supabase.rpc('search_knowledge', {
-            search_query: query
-        })
+        // 3. Build prompt for Gemini
+        const systemPrompt = "Eres el asistente experto de las asesoras comerciales de 440 Clinic y del Dr. Gio. Responde a la pregunta del usuario utilizando ÚNICAMENTE la siguiente base de conocimientos. Si la respuesta no está en el texto proporcionado, indica que deben consultar directamente con el cirujano. Sé amable, conciso y profesional.";
+        const kbText = knowledgeBase.map((k: any) => `Título: ${k.title}\nContenido: ${k.content}`).join("\n---\n");
+        const prompt = `${systemPrompt}\n\nBase de conocimientos:\n${kbText}\n\nPregunta: ${query}`;
 
-        if (searchError) throw searchError
-
-        // 4. Build Moderate Length Response
-        const bestMatch = documents?.[0]
-        const answer = bestMatch
-            ? `${bestMatch.title.toUpperCase()}:\n${bestMatch.content.substring(0, 1200)}${bestMatch.content.length > 1200 ? '...' : ''}`
-            : "No encontré información específica."
+        // 4. Call Gemini API
+        const geminiApiKey = Deno.env.get('GEMINI_API_KEY') ?? '';
+        if (!geminiApiKey) throw new Error('Missing GEMINI_API_KEY secret');
+        const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
+        });
+        if (!geminiResponse.ok) {
+            const errText = await geminiResponse.text();
+            throw new Error(`Gemini API error ${geminiResponse.status}: ${errText}`);
+        }
+        const geminiData = await geminiResponse.json();
+        const answer = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "No se obtuvo respuesta.";
 
         return new Response(
             JSON.stringify({

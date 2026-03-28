@@ -255,7 +255,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         frequent_diagnoses: FrequentDiagnosis[];
         frequent_surgeries: FrequentSurgery[];
     }>) => {
-        await supabase.from('suite_config').upsert({
+        const payload = {
             id: 'main',
             doctor_name: doctorName, rethus, address, contact_phone: contactPhone,
             website_url: websiteUrl,
@@ -269,7 +269,24 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             frequent_surgeries: frequentSurgeries,
             ...updates,
             updated_at: new Date().toISOString(),
-        });
+        };
+
+        const sanitizeText = (obj: any): any => {
+            if (typeof obj === 'string') return obj.replace(/\u0000/g, '');
+            if (Array.isArray(obj)) return obj.map(sanitizeText);
+            if (obj !== null && typeof obj === 'object') {
+                const newObj: any = {};
+                for (const key in obj) {
+                    newObj[key] = sanitizeText(obj[key]);
+                }
+                return newObj;
+            }
+            return obj;
+        };
+
+        const safePayload = sanitizeText(payload);
+
+        await supabase.from('suite_config').upsert(safePayload);
     };
 
     const updateCatalog = (catalog: string, items: any) => {

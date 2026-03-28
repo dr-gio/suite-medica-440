@@ -12,28 +12,32 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
     const { medications } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
-    const [meds, setMeds] = useState([
-        { name: '', dosage: '', frequency: '', duration: '', indications: '' }
-    ]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [meds, setMeds] = useState<any[]>([]);
 
-    const addMed = () => setMeds([...meds, { name: '', dosage: '', frequency: '', duration: '', indications: '' }]);
+    const filteredCatalog = medications.filter(m => 
+        m.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const addMedFromCatalog = (catalogMed: any) => {
+        setMeds([...meds, { 
+            name: catalogMed.name, 
+            dosage: catalogMed.dosage, 
+            frequency: catalogMed.frequency, 
+            duration: catalogMed.duration, 
+            indications: catalogMed.indications 
+        }]);
+    };
+
+    const addCustomMed = () => {
+        setMeds([...meds, { name: '', dosage: '', frequency: '', duration: '', indications: '' }]);
+    };
+
     const removeMed = (index: number) => setMeds(meds.filter((_, i) => i !== index));
 
     const updateMed = (index: number, field: string, value: string) => {
         const newMeds = [...meds];
         newMeds[index] = { ...newMeds[index], [field]: value };
-
-        // Auto-fill logic when selecting a name from the list
-        if (field === 'name') {
-            const foundMatch = medications.find(m => m.name === value);
-            if (foundMatch) {
-                if (!newMeds[index].dosage) newMeds[index].dosage = foundMatch.dosage;
-                if (!newMeds[index].frequency) newMeds[index].frequency = foundMatch.frequency;
-                if (!newMeds[index].duration) newMeds[index].duration = foundMatch.duration;
-                if (!newMeds[index].indications) newMeds[index].indications = foundMatch.indications;
-            }
-        }
-
         setMeds(newMeds);
     };
 
@@ -46,8 +50,8 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             {/* Editor View */}
-            <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div className="form-section no-print" style={{ flex: 1, border: 'none', padding: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Fórmula Médica</h2>
                     <button
                         className="action-btn primary"
@@ -60,50 +64,139 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
                     </button>
                 </div>
 
-                <datalist id="medications-list">
-                    {medications.map(m => <option key={m.id} value={m.name} />)}
-                </datalist>
-
-                {meds.map((med, index) => (
-                    <div key={index} className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', marginBottom: '1rem', borderLeft: '4px solid var(--primary-light)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>Medicamento #{index + 1}</span>
-                            <button className="remove-btn" onClick={() => removeMed(index)}><X size={18} /></button>
+                <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '1.5rem', height: 'calc(100vh - 250px)' }}>
+                    {/* Selection Sidebar */}
+                    <div style={{ background: 'var(--bg-main)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+                            <label className="form-label">Buscar Medicamento</label>
+                            <input 
+                                className="form-input" 
+                                placeholder="Ej: Amoxicilina..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-
-                        <div className="form-row" style={{ marginBottom: 0 }}>
-                            <div className="form-group" style={{ flex: 2 }}>
-                                <label className="form-label">Nombre del Medicamento</label>
-                                <input className="form-input" list="medications-list" placeholder="Ej: Amoxicilina 500mg" value={med.name} onChange={(e) => updateMed(index, 'name', e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Dosis / Presentación</label>
-                                <input className="form-input" placeholder="Ej: Tabletas" value={med.dosage} onChange={(e) => updateMed(index, 'dosage', e.target.value)} />
-                            </div>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
+                            {filteredCatalog.length > 0 ? (
+                                filteredCatalog.map((m) => (
+                                    <div 
+                                        key={m.id} 
+                                        className="item-card" 
+                                        style={{ 
+                                            padding: '0.75rem', 
+                                            marginBottom: '0.5rem', 
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            border: '1px solid transparent'
+                                        }}
+                                        onClick={() => addMedFromCatalog(m)}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                            <div>
+                                                <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>{m.name}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{m.dosage}</div>
+                                            </div>
+                                            <Plus size={16} color="var(--primary)" />
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                    No se encontraron medicamentos.
+                                </div>
+                            )}
                         </div>
-
-                        <div className="form-row" style={{ marginBottom: 0 }}>
-                            <div className="form-group">
-                                <label className="form-label">Frecuencia</label>
-                                <input className="form-input" placeholder="Ej: Cada 8 horas" value={med.frequency} onChange={(e) => updateMed(index, 'frequency', e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Duración</label>
-                                <input className="form-input" placeholder="Ej: Por 7 días" value={med.duration} onChange={(e) => updateMed(index, 'duration', e.target.value)} />
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Indicaciones / Observaciones</label>
-                            <input className="form-input" placeholder="Ej: Tomar con las comidas" value={med.indications} onChange={(e) => updateMed(index, 'indications', e.target.value)} />
-                        </div>
+                        <button 
+                            className="action-btn" 
+                            onClick={addCustomMed}
+                            style={{ margin: '1rem', justifyContent: 'center', borderStyle: 'dashed' }}
+                        >
+                            <Plus size={18} />
+                            Otro / Personalizado
+                        </button>
                     </div>
-                ))}
 
-                <button className="action-btn add-btn" onClick={addMed} style={{ borderStyle: 'dashed', width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}>
-                    <Plus size={18} />
-                    Agregar Medicamento
-                </button>
+                    {/* Prescribed List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="table-container" style={{ flex: 1, overflowY: 'auto', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 1, borderBottom: '1px solid var(--border-color)' }}>
+                                    <tr>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Medicamento</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', width: '150px' }}>Dosis/Presentación</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', width: '180px' }}>Frecuencia (Horas)</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', width: '150px' }}>Duración (Días)</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', width: '50px' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {meds.map((med, index) => (
+                                        <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <input 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                    value={med.name} 
+                                                    onChange={(e) => updateMed(index, 'name', e.target.value)}
+                                                    placeholder="Nombre del medicamento..."
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <input 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                    value={med.dosage} 
+                                                    onChange={(e) => updateMed(index, 'dosage', e.target.value)}
+                                                    placeholder="Ej: Tabletas"
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <input 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                    value={med.frequency} 
+                                                    onChange={(e) => updateMed(index, 'frequency', e.target.value)}
+                                                    placeholder="Ej: Cada 8 horas"
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <input 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
+                                                    value={med.duration} 
+                                                    onChange={(e) => updateMed(index, 'duration', e.target.value)}
+                                                    placeholder="Ej: Por 7 días"
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem', textAlign: 'center' }}>
+                                                <button className="remove-btn" onClick={() => removeMed(index)}><X size={16} /></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {meds.length === 0 && (
+                                        <tr>
+                                            <td colSpan={5} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                Selecciona medicamentos de la izquierda para agregarlos a la fórmula.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {meds.some(m => m.name) && (
+                            <div style={{ padding: '1rem', background: 'var(--primary-light)', borderRadius: '8px', border: '1px solid var(--primary)' }}>
+                                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)', marginBottom: '0.5rem' }}>Indicaciones Globales / Notas:</div>
+                                <textarea 
+                                    className="form-input"
+                                    placeholder="Agregue indicaciones generales si es necesario..."
+                                    style={{ width: '100%', minHeight: '80px', background: 'white' }}
+                                    // Note: we could add a root field for global indications if needed, 
+                                    // for now we'll just keep it simple or use the last one's indications
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Print View */}
@@ -131,6 +224,7 @@ const Prescriptions: React.FC<Props> = ({ patient }) => {
             <style>{`
                 .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .item-card:hover { border-color: var(--primary) !important; background: var(--primary-light) !important; }
             `}</style>
         </div>
     );
