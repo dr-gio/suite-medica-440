@@ -10,7 +10,7 @@ export const usePDF = () => {
     const [downloading, setDownloading] = useState(false);
 
     const downloadPDF = async (element: HTMLElement, filename: string = 'document.pdf', options: UsePDFOptions = {}) => {
-        if (!element) return;
+        if (!element) return null;
 
         setDownloading(true);
         try {
@@ -28,8 +28,8 @@ export const usePDF = () => {
                 html2canvas: {
                     scale: 2,
                     useCORS: true,
-                    logging: true, // Enable temporarily to see what html2canvas is doing
-                    allowTaint: false, // Tainted canvas often causes failures, CORS is preferred
+                    logging: false,
+                    allowTaint: false,
                     scrollY: 0,
                     scrollX: 0
                 },
@@ -40,22 +40,26 @@ export const usePDF = () => {
             // Wait for styles and images to settle
             await new Promise(resolve => setTimeout(resolve, 300));
 
-            // Wrap in a timeout so it doesn't hang infinitely if html2canvas gets stuck
-            const pdfPromise = html2pdf().from(element).set(opt).save();
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error("Timeout generating PDF. It took too long.")), 20000)
-            );
+            // Generate the PDF
+            const worker = html2pdf().from(element).set(opt);
+            
+            // Save the file
+            await worker.save();
 
-            await Promise.race([pdfPromise, timeoutPromise]);
+            // Also get the blob for optional email processing
+            const pdfBlob = await worker.outputPdf('blob');
 
             // Cleanup
             document.body.classList.remove('is-capturing-pdf');
             window.scrollTo(0, originalScrollPos);
+            
+            return pdfBlob;
         } catch (error) {
             console.error('Error generating PDF:', error);
             document.body.classList.remove('is-capturing-pdf');
-            alert('Hubo un error al generar el PDF. Asegúrate de verificar tu conexión a internet y probar nuevamente. Mensaje: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+            alert('Hubo un error al generar el PDF. Asegúrate de verificar tu conexión a internet y probar nuevamente.');
             window.print(); // Fallback to system print dialog
+            return null;
         } finally {
             setDownloading(false);
         }

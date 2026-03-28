@@ -31,10 +31,12 @@ function Dashboard() {
   const [activeTab, setActiveTab] = useState('prescriptions');
   const [showShare, setShowShare] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isDrGio = localStorage.getItem('isDrGio') === 'true';
 
   const [patient, setPatient] = useState({
     name: 'Juan Pérez',
     id: 'CC 1234567890',
+    email: 'paciente@ejemplo.com',
     date: new Date().toISOString().split('T')[0],
     age: '35',
   });
@@ -50,16 +52,16 @@ function Dashboard() {
     { id: 'surgery', label: 'Rec. Quirúrgicas', icon: <ClipboardList size={20} /> },
     { id: 'nutrition', label: 'Plan Nutrición', icon: <Utensils size={20} /> },
     { id: 'consent', label: 'Consentimientos', icon: <FileText size={20} /> },
-    { id: 'sickleave', label: 'Incapacidad', icon: <CalendarClock size={20} /> },
+    { id: 'sickleave', label: 'Incapacidad', icon: <CalendarClock size={20} />, restricted: true },
     { id: 'travel', label: 'Cert. Viaje', icon: <Plane size={20} /> },
-    { id: 'referral', label: 'Remisiones', icon: <Send size={20} /> },
-    { id: 'surgical-description', label: 'Descrip. Quir.', icon: <ActivitySquare size={20} /> },
+    { id: 'referral', label: 'Remisiones', icon: <Send size={20} />, restricted: true },
+    { id: 'surgical-description', label: 'Descrip. Quir.', icon: <ActivitySquare size={20} />, restricted: true },
     { id: 'proposal', label: 'Presupuesto', icon: <Wallet size={20} /> },
     { id: 'medical-tourism', label: 'Turismo Médico', icon: <MapPin size={20} /> },
     { id: 'surgery-results', label: '📸 Resultados', icon: <ImageIcon size={20} /> },
     { id: 'sales-tools', label: 'Herramientas Vtas', icon: <FolderOpen size={20} /> },
     { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} /> },
-  ];
+  ].filter(item => !item.restricted || isDrGio);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -76,13 +78,13 @@ function Dashboard() {
       case 'consent':
         return <InformedConsent patient={patient} />;
       case 'sickleave':
-        return <SickLeave patient={patient} />;
+        return isDrGio ? <SickLeave patient={patient} /> : <Navigate to="/" replace />;
       case 'travel':
         return <TravelCertificate patient={patient} />;
       case 'referral':
-        return <Referral patient={patient} />;
+        return isDrGio ? <Referral patient={patient} /> : <Navigate to="/" replace />;
       case 'surgical-description':
-        return <SurgicalDescription patient={patient} />;
+        return isDrGio ? <SurgicalDescription patient={patient} /> : <Navigate to="/" replace />;
       case 'proposal':
         return <EconomicProposal patient={patient} />;
       case 'medical-tourism':
@@ -135,8 +137,11 @@ function Dashboard() {
             <div className="form-section no-print">
               <h2 className="form-label mb-2">Datos del Paciente</h2>
               <div className="form-row">
-                <div className="form-group"><label className="form-label">Nombre Completo</label><input className="form-input" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} /></div>
-                <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Documento</label><input className="form-input" value={patient.id} onChange={(e) => setPatient({ ...patient, id: e.target.value })} /></div>
+                <div className="form-group" style={{ flex: 1 }}><label className="form-label">Nombre Completo</label><input className="form-input" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} /></div>
+                <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Documento / ID</label><input className="form-input" placeholder="Requerido" value={patient.id} onChange={(e) => setPatient({ ...patient, id: e.target.value })} /></div>
+                <div className="form-group" style={{ flex: 0.8 }}><label className="form-label">Email</label><input type="email" className="form-input" placeholder="Requerido para envío" value={patient.email} onChange={(e) => setPatient({ ...patient, email: e.target.value })} /></div>
+              </div>
+              <div className="form-row">
                 <div className="form-group" style={{ flex: 0.3 }}><label className="form-label">Edad</label><input className="form-input" value={patient.age} onChange={(e) => setPatient({ ...patient, age: e.target.value })} /></div>
                 <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Fecha</label><input type="date" className="form-input" value={patient.date} onChange={(e) => setPatient({ ...patient, date: e.target.value })} /></div>
               </div>

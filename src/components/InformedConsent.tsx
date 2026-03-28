@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Send, History, ExternalLink, Trash2 } from 'lucide-react';
+import { Plus, X, Download, Loader2, Save, FileText, Check, Send, History, ExternalLink, Trash2 } from 'lucide-react';
+import { emailService } from '../services/emailService';
 import { supabase } from '../lib/supabase';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
@@ -13,12 +14,13 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
     const { consentTemplates, doctorName } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
+    const [validationError, setValidationError] = useState<string | null>(null);
     const [selectedTemplate, setSelectedTemplate] = useState('');
     const [content, setContent] = useState('');
     const [procedureName, setProcedureName] = useState('');
     const [surgeryDate, setSurgeryDate] = useState(new Date().toISOString().split('T')[0]);
     const [signingDate, setSigningDate] = useState(new Date().toISOString().split('T')[0]);
-    const [patientEmail, setPatientEmail] = useState('');
+    const [patientEmail, setPatientEmail] = useState(patient.email || '');
     const [sending, setSending] = useState(false);
     const [history, setHistory] = useState<any[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(true);
@@ -60,9 +62,56 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
         }
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar el consentimiento.');
+            return;
+        }
+        setValidationError(null);
+
         if (printRef.current) {
-            downloadPDF(printRef.current, `Consentimiento_${procedureName || 'Procedimiento'}.pdf`);
+            const filename = `Consentimiento_${patient.name || 'Paciente'}.pdf`;
+            const pdfBlob = await downloadPDF(printRef.current, filename);
+
+            if (pdfBlob && window.confirm(`¿Deseas enviar este consentimiento por correo a ${patient.email}?`)) {
+                // Convert blob to base64
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                          <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                          <p>Adjunto encontrarás tu <strong>Consentimiento Informado</strong> generado en 440 Clinic.</p>
+                          <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                            <p style="margin:0"><strong>Médico:</strong> ${doctorName || 'Dr. Giovanni Fuentes'}</p>
+                          </div>
+                          <p>Si tienes alguna duda, puedes contactarnos.</p>
+                          <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                            <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                            <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                          </div>
+                        </div>
+                    `;
+
+                    const { error } = await emailService.sendMedicalDocument({
+                        to: patient.email,
+                        subject: `Consentimiento Informado – 440 Clinic`,
+                        body: bodyHtml,
+                        pdfBase64: base64data,
+                        pdfFilename: filename,
+                        documentId: patient.id
+                    });
+
+                    if (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    } else {
+                        alert('¡Consentimiento enviado correctamente!');
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
         }
     };
 
@@ -240,8 +289,13 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Consentimiento Informado</h2>
+                    {validationError && (
+                        <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <X size={16} /> {validationError}
+                        </div>
+                    )}
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <button
                             className="action-btn"

@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, X } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
 import { usePDF } from '../hooks/usePDF';
+import { emailService } from '../services/emailService';
 
 interface Props {
     patient: any;
 }
 
 const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
-    const { surgeries } = useConfig();
+    const { surgeries, doctorName, rethus, contactPhone } = useConfig();
     const preRef = useRef<HTMLDivElement>(null);
     const postRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
@@ -18,6 +19,7 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
     const [postText, setPostText] = useState('');
     const [activeTab, setActiveTab] = useState<'pre' | 'post'>('pre');
     const [downloadingPost, setDownloadingPost] = useState(false);
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     useEffect(() => {
         const match = surgeries.find(s => s.name === surgery);
@@ -30,17 +32,107 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
         }
     }, [surgery, surgeries]);
 
-    const handleDownloadPre = () => {
+    const handleDownloadPre = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar las recomendaciones.');
+            return;
+        }
+        setValidationError(null);
+
         if (preRef.current) {
-            downloadPDF(preRef.current, `Pre-Quirurgicas_${surgery || 'Cirugia'}.pdf`);
+            const filename = `Pre-Quirurgicas_${surgery || 'Cirugia'}.pdf`;
+            const pdfBlob = await downloadPDF(preRef.current, filename);
+            
+            if (pdfBlob && window.confirm(`¿Deseas enviar estas recomendaciones por correo a ${patient.email}?`)) {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                            <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                            <p>Adjunto encontrarás tus <strong>Recomendaciones Pre-Quirúrgicas</strong> generadas en 440 Clinic.</p>
+                            <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                <p style="margin:0"><strong>Médico:</strong> ${doctorName || 'Dr. Giovanni Fuentes'}</p>
+                                <p style="margin:0"><strong>RETHUS:</strong> ${rethus || 'CMC2017-222322'}</p>
+                            </div>
+                            <p>Si tienes alguna duda, puedes contactarnos al 📞 ${contactPhone || '3181800130'}.</p>
+                            <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                                <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                                <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                            </div>
+                        </div>
+                    `;
+
+                    try {
+                        await emailService.sendMedicalDocument({
+                            to: patient.email,
+                            subject: `Recomendaciones Pre-Quirúrgicas – 440 Clinic`,
+                            body: bodyHtml,
+                            pdfBase64: base64data,
+                            pdfFilename: filename,
+                            documentId: patient.id
+                        });
+                        alert('¡Recomendaciones enviadas correctamente!');
+                    } catch (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
         }
     };
 
     const handleDownloadPost = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar las recomendaciones.');
+            return;
+        }
+        setValidationError(null);
+
         if (postRef.current) {
             setDownloadingPost(true);
-            await downloadPDF(postRef.current, `Post-Quirurgicas_${surgery || 'Cirugia'}.pdf`);
+            const filename = `Post-Quirurgicas_${surgery || 'Cirugia'}.pdf`;
+            const pdfBlob = await downloadPDF(postRef.current, filename);
             setDownloadingPost(false);
+
+            if (pdfBlob && window.confirm(`¿Deseas enviar estas recomendaciones por correo a ${patient.email}?`)) {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                            <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                            <p>Adjunto encontrarás tus <strong>Recomendaciones Post-Quirúrgicas</strong> generadas en 440 Clinic.</p>
+                            <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                <p style="margin:0"><strong>Médico:</strong> ${doctorName || 'Dr. Giovanni Fuentes'}</p>
+                                <p style="margin:0"><strong>RETHUS:</strong> ${rethus || 'CMC2017-222322'}</p>
+                            </div>
+                            <p>Si tienes alguna duda, puedes contactarnos al 📞 ${contactPhone || '3181800130'}.</p>
+                            <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                                <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                                <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                            </div>
+                        </div>
+                    `;
+
+                    try {
+                        await emailService.sendMedicalDocument({
+                            to: patient.email,
+                            subject: `Recomendaciones Post-Quirúrgicas – 440 Clinic`,
+                            body: bodyHtml,
+                            pdfBase64: base64data,
+                            pdfFilename: filename,
+                            documentId: patient.id
+                        });
+                        alert('¡Recomendaciones enviadas correctamente!');
+                    } catch (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
         }
     };
 
@@ -60,9 +152,14 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>
-                    Recomendaciones Quirúrgicas
-                </h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Recomendaciones Quirúrgicas</h2>
+                    {validationError && (
+                        <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <X size={16} /> {validationError}
+                        </div>
+                    )}
+                </div>
 
                 {/* Procedure selector */}
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>

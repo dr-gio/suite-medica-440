@@ -428,6 +428,7 @@ textarea.form-input {
     position: fixed;
     height: 100vh;
     left: -280px;
+    top: 0;
   }
 
   .sidebar.open {

@@ -3,17 +3,19 @@ import { Plus, X, Download, Loader2 } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
 import { usePDF } from '../hooks/usePDF';
+import { emailService } from '../services/emailService';
 
 interface Props {
     patient: any;
 }
 
 const Imaging: React.FC<Props> = ({ patient }) => {
-    const { imaging: catalogImaging } = useConfig();
+    const { imaging: catalogImaging, doctorName, rethus, contactPhone } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
     const [searchTerm, setSearchTerm] = useState('');
     const [studies, setStudies] = useState<any[]>([]);
+    const [validationError, setValidationError] = useState<string | null>(null);
     const [dx, setDx] = useState('');
 
     const filteredCatalog = catalogImaging.filter(s => 
@@ -40,9 +42,54 @@ const Imaging: React.FC<Props> = ({ patient }) => {
         setStudies(newStudies);
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar la solicitud.');
+            return;
+        }
+        setValidationError(null);
+
         if (printRef.current) {
-            downloadPDF(printRef.current, `Imagenes_${patient.name || 'Paciente'}.pdf`);
+            const filename = `Imagenes_${patient.name || 'Paciente'}.pdf`;
+            const pdfBlob = await downloadPDF(printRef.current, filename);
+            
+            if (pdfBlob && window.confirm(`¿Deseas enviar esta solicitud de imágenes por correo a ${patient.email}?`)) {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                            <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                            <p>Adjunto encontrarás tu <strong>Solicitud de Imágenes Diagnósticas</strong> generada en 440 Clinic.</p>
+                            <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                                <p style="margin:0"><strong>Médico:</strong> ${doctorName || 'Dr. Giovanni Fuentes'}</p>
+                                <p style="margin:0"><strong>RETHUS:</strong> ${rethus || 'CMC2017-222322'}</p>
+                            </div>
+                            <p>Si tienes alguna duda, puedes contactarnos al 📞 ${contactPhone || '3181800130'}.</p>
+                            <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                                <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                                <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                            </div>
+                        </div>
+                    `;
+
+                    try {
+                        await emailService.sendMedicalDocument({
+                            to: patient.email,
+                            subject: `Orden de Imágenes Diagnósticas - ${patient.name}`,
+                            body: bodyHtml,
+                            pdfBase64: base64data,
+                            pdfFilename: filename,
+                            documentId: patient.id
+                        });
+                        alert('Correo enviado exitosamente.');
+                    } catch (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
         }
     };
 
@@ -51,6 +98,11 @@ const Imaging: React.FC<Props> = ({ patient }) => {
             <div className="form-section no-print" style={{ flex: 1, border: 'none', padding: 0 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Imágenes Diagnósticas</h2>
+                    {validationError && (
+                        <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <X size={16} /> {validationError}
+                        </div>
+                    )}
                     <button
                         className="action-btn primary"
                         onClick={handleDownload}
@@ -67,9 +119,9 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                     <input className="form-input" placeholder="Ej: Dolor abdominal en estudio" value={dx} onChange={(e) => setDx(e.target.value)} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '1.5rem', height: 'calc(100vh - 300px)' }}>
+                <div className="responsive-split-view" style={{ height: 'calc(100vh - 350px)' }}>
                     {/* Selection Sidebar */}
-                    <div style={{ background: 'var(--bg-main)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div className="internal-selection-sidebar">
                         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
                             <label className="form-label">Buscar Estudio</label>
                             <input 
@@ -77,27 +129,21 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                                 placeholder="Ej: Ecografía..." 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ width: '100%' }}
                             />
                         </div>
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem' }}>
+                        <div className="catalog-list">
                             {filteredCatalog.length > 0 ? (
                                 filteredCatalog.map((s) => (
                                     <div 
                                         key={s.id} 
-                                        className="item-card" 
-                                        style={{ 
-                                            padding: '0.75rem', 
-                                            marginBottom: '0.5rem', 
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s',
-                                            border: '1px solid transparent'
-                                        }}
+                                        className="item-card catalog-item" 
                                         onClick={() => addStudyFromCatalog(s)}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                             <div>
-                                                <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>{s.name}</div>
-                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{s.reason}</div>
+                                                <div className="item-title-text">{s.name}</div>
+                                                <div className="item-subtitle-text">{s.reason}</div>
                                             </div>
                                             <Plus size={16} color="var(--primary)" />
                                         </div>
@@ -120,63 +166,109 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                     </div>
 
                     {/* Requested List */}
-                    <div className="table-container" style={{ overflowY: 'auto', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 1, borderBottom: '1px solid var(--border-color)' }}>
-                                <tr>
-                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Estudio / Región</th>
-                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Indicación Médica</th>
-                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', width: '180px' }}>Formato</th>
-                                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center', width: '50px' }}></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {studies.map((study, index) => (
-                                    <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                        <td style={{ padding: '0.5rem 1rem' }}>
+                    <div className="selected-items-container">
+                        {/* Desktop Table */}
+                        <div className="desktop-only table-container" style={{ flex: 1, overflowY: 'auto', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 1, borderBottom: '1px solid var(--border-color)' }}>
+                                    <tr>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Estudio / Región</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Indicación Médica</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-muted)', width: '180px' }}>Formato</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', width: '50px' }}></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {studies.map((study, index) => (
+                                        <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <input 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent', width: '100%' }} 
+                                                    value={study.name} 
+                                                    onChange={(e) => updateStudy(index, 'name', e.target.value)}
+                                                    placeholder="Nombre del estudio..."
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <input 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent', width: '100%' }} 
+                                                    value={study.reason} 
+                                                    onChange={(e) => updateStudy(index, 'reason', e.target.value)}
+                                                    placeholder="Ej: Descartar litiasis"
+                                                />
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem' }}>
+                                                <select 
+                                                    className="form-input" 
+                                                    style={{ border: 'none', padding: '0.4rem', background: 'transparent', width: '100%' }} 
+                                                    value={study.format} 
+                                                    onChange={(e) => updateStudy(index, 'format', e.target.value)}
+                                                >
+                                                    <option>Digital o Impreso</option>
+                                                    <option>Solo Cd / Digital</option>
+                                                    <option>Placas Impresas</option>
+                                                </select>
+                                            </td>
+                                            <td style={{ padding: '0.5rem 1rem', textAlign: 'center' }}>
+                                                <button className="remove-btn" onClick={() => removeStudy(index)}><X size={16} /></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Cards */}
+                        <div className="mobile-only" style={{ flex: 1, overflowY: 'auto' }}>
+                            {studies.map((study, index) => (
+                                <div key={index} className="mobile-card">
+                                    <div className="mobile-card-header">
+                                        <div style={{ flex: 1 }}>
+                                            <span className="mobile-card-label">Estudio</span>
                                             <input 
                                                 className="form-input" 
-                                                style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
                                                 value={study.name} 
                                                 onChange={(e) => updateStudy(index, 'name', e.target.value)}
                                                 placeholder="Nombre del estudio..."
+                                                style={{ border: 'none', padding: '0.25rem 0', fontWeight: 600, fontSize: '1rem', width: '100%' }}
                                             />
-                                        </td>
-                                        <td style={{ padding: '0.5rem 1rem' }}>
-                                            <input 
-                                                className="form-input" 
-                                                style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
-                                                value={study.reason} 
-                                                onChange={(e) => updateStudy(index, 'reason', e.target.value)}
-                                                placeholder="Ej: Descartar litiasis"
-                                            />
-                                        </td>
-                                        <td style={{ padding: '0.5rem 1rem' }}>
-                                            <select 
-                                                className="form-input" 
-                                                style={{ border: 'none', padding: '0.4rem', background: 'transparent' }} 
-                                                value={study.format} 
-                                                onChange={(e) => updateStudy(index, 'format', e.target.value)}
-                                            >
-                                                <option>Digital o Impreso</option>
-                                                <option>Solo Cd / Digital</option>
-                                                <option>Placas Impresas</option>
-                                            </select>
-                                        </td>
-                                        <td style={{ padding: '0.5rem 1rem', textAlign: 'center' }}>
-                                            <button className="remove-btn" onClick={() => removeStudy(index)}><X size={16} /></button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {studies.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                            Selecciona estudios de la izquierda para solicitarlos.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                        </div>
+                                        <button className="remove-btn" onClick={() => removeStudy(index)}><X size={20} /></button>
+                                    </div>
+                                    <div className="mobile-card-row">
+                                        <span className="mobile-card-label">Indicación Médica</span>
+                                        <input 
+                                            className="form-input" 
+                                            value={study.reason} 
+                                            onChange={(e) => updateStudy(index, 'reason', e.target.value)}
+                                            placeholder="Ej: Descartar litiasis"
+                                            style={{ width: '100%' }}
+                                        />
+                                    </div>
+                                    <div className="mobile-card-row">
+                                        <span className="mobile-card-label">Formato</span>
+                                        <select 
+                                            className="form-input" 
+                                            value={study.format} 
+                                            onChange={(e) => updateStudy(index, 'format', e.target.value)}
+                                            style={{ width: '100%' }}
+                                        >
+                                            <option>Digital o Impreso</option>
+                                            <option>Solo Cd / Digital</option>
+                                            <option>Placas Impresas</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {studies.length === 0 && (
+                            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                                Selecciona estudios de la lista para solicitarlos.
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -206,6 +298,81 @@ const Imaging: React.FC<Props> = ({ patient }) => {
             <style>{`
                 .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .item-card:hover { border-color: var(--primary) !important; background: var(--primary-light) !important; }
+                
+                .responsive-split-view {
+                    display: grid;
+                    grid-template-columns: 350px 1fr;
+                    gap: 1.5rem;
+                    height: calc(100vh - 250px);
+                }
+
+                .internal-selection-sidebar {
+                    background: var(--bg-main);
+                    border-radius: 12px;
+                    border: 1px solid var(--border-color);
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                }
+
+                .catalog-list {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 0.5rem;
+                }
+
+                .catalog-item {
+                    padding: 0.75rem;
+                    margin-bottom: 0.5rem;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    border: 1px solid transparent;
+                }
+
+                .item-title-text {
+                    font-weight: 600;
+                    color: var(--text-main);
+                    fontSize: 0.9rem;
+                }
+
+                .item-subtitle-text {
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                }
+
+                .selected-items-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                    overflow: hidden;
+                }
+
+                @media (max-width: 1024px) {
+                    .responsive-split-view {
+                        grid-template-columns: 300px 1fr;
+                        gap: 1rem;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .responsive-split-view {
+                        display: flex;
+                        flex-direction: column;
+                        height: auto;
+                        gap: 1.5rem;
+                    }
+
+                    .internal-selection-sidebar {
+                        height: 350px;
+                        width: 100%;
+                    }
+
+                    .selected-items-container {
+                        height: auto;
+                        overflow: visible;
+                    }
+                }
             `}</style>
         </div>
     );

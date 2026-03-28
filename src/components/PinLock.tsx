@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Delete } from 'lucide-react';
 
 const PIN_STORAGE_KEY = 'suiteMedicaPin';
+const DRGIO_PIN_STORAGE_KEY = 'suiteMedicaDrGioPin';
 const DEFAULT_PIN = '440440';
+const DEFAULT_DRGIO_PIN = '048231';
 const PIN_LENGTH = 6;
 // How many minutes before the app auto-locks again
 const LOCK_TIMEOUT_MINUTES = 30;
@@ -13,6 +15,14 @@ export const getStoredPin = (): string => {
 
 export const setStoredPin = (pin: string) => {
     localStorage.setItem(PIN_STORAGE_KEY, pin);
+};
+
+export const getStoredDrGioPin = (): string => {
+    return localStorage.getItem(DRGIO_PIN_STORAGE_KEY) || DEFAULT_DRGIO_PIN;
+};
+
+export const setStoredDrGioPin = (pin: string) => {
+    localStorage.setItem(DRGIO_PIN_STORAGE_KEY, pin);
 };
 
 interface PinLockProps {
@@ -46,8 +56,11 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
 
     const validate = (pin: string) => {
         const stored = getStoredPin();
-        if (pin === stored) {
+        const storedDrGio = getStoredDrGioPin();
+        
+        if (pin === stored || pin === storedDrGio) {
             localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
+            localStorage.setItem('isDrGio', (pin === storedDrGio).toString());
             onUnlock();
         } else {
             setError(true);

@@ -1,15 +1,19 @@
 import React, { useState, useRef } from 'react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, X } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { usePDF } from '../hooks/usePDF';
+import { emailService } from '../services/emailService';
+import { useConfig } from '../context/ConfigContext';
 
 interface Props {
     patient: any;
 }
 
 const SickLeave: React.FC<Props> = ({ patient }) => {
+    const { signatureUrl, sealUrl, doctorName, rethus } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
+    const [validationError, setValidationError] = useState<string | null>(null);
     const [days, setDays] = useState('3');
     const [startDate, setStartDate] = useState(patient.date || new Date().toISOString().split('T')[0]);
     const [dx, setDx] = useState('');
@@ -23,17 +27,69 @@ const SickLeave: React.FC<Props> = ({ patient }) => {
         return start.toISOString().split('T')[0];
     };
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar la incapacidad.');
+            return;
+        }
+        setValidationError(null);
+
         if (printRef.current) {
-            downloadPDF(printRef.current, `Incapacidad_${patient.name || 'Paciente'}.pdf`);
+            const filename = `Incapacidad_${patient.name || 'Paciente'}.pdf`;
+            const pdfBlob = await downloadPDF(printRef.current, filename);
+
+            if (pdfBlob && window.confirm(`¿Deseas enviar esta incapacidad por correo a ${patient.email}?`)) {
+                // Convert blob to base64
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                          <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                          <p>Adjunto encontrarás tu <strong>Certificado de Incapacidad Médica</strong> generado en 440 Clinic.</p>
+                          <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                            <p style="margin:0"><strong>Médico:</strong> Dr. Giovanni Fuentes</p>
+                          </div>
+                          <p>Si tienes alguna duda, puedes contactarnos.</p>
+                          <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                            <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                            <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                          </div>
+                        </div>
+                    `;
+
+                    const { error } = await emailService.sendMedicalDocument({
+                        to: patient.email,
+                        subject: `Certificado de Incapacidad – 440 Clinic`,
+                        body: bodyHtml,
+                        pdfBase64: base64data,
+                        pdfFilename: filename,
+                        documentId: patient.id
+                    });
+
+                    if (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    } else {
+                        alert('¡Certificado enviado correctamente!');
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
         }
     };
 
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Certificado de Incapacidad Médica</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
+                    <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Incapacidad Médica</h2>
+                    {validationError && (
+                        <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <X size={16} /> {validationError}
+                        </div>
+                    )}
                     <button
                         className="action-btn primary"
                         onClick={handleDownload}

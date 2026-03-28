@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Save, FileText, Loader2, Clock, User, Clipboard, Activity, Search, BookOpen } from 'lucide-react';
+import { Save, FileText, Loader2, Clock, User, Clipboard, Activity, Search, BookOpen, Download, X, Check } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
+import { usePDF } from '../hooks/usePDF';
+import { emailService } from '../services/emailService';
 
 interface Patient {
     name: string;
     id: string;
+    email: string;
     date: string;
     age: string;
 }
@@ -17,8 +20,11 @@ interface SurgicalDescriptionProps {
 
 const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) => {
     const { surgicalTemplates, frequentDiagnoses, frequentSurgeries } = useConfig();
+    const { downloadPDF, downloading: generatingPDF } = usePDF();
+    const printRef = useRef<HTMLDivElement>(null);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     // UI state for search/selection
     const [showTemplates, setShowTemplates] = useState(false);
@@ -91,6 +97,59 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
         setFormData(prev => ({ ...prev, cupsCode: surgery.code, procedureName: surgery.name }));
         setShowSurgerySearch(false);
         setSearchTerm('');
+    };
+
+    const handleDownload = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar la descripción.');
+            return;
+        }
+        setValidationError(null);
+
+        if (printRef.current) {
+            const filename = `Descripcion_Quirurgica_${patient.name || 'Paciente'}.pdf`;
+            const pdfBlob = await downloadPDF(printRef.current, filename);
+
+            if (pdfBlob && window.confirm(`¿Deseas enviar esta descripción por correo a ${patient.email}?`)) {
+                // Convert blob to base64
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                          <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                          <p>Adjunto encontrarás la <strong>Descripción Quirúrgica</strong> de tu procedimiento en 440 Clinic.</p>
+                          <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                            <p style="margin:0"><strong>Médico:</strong> ${formData.surgeon || 'Dr. Giovanni Fuentes'}</p>
+                          </div>
+                          <p>Si tienes alguna duda, puedes contactarnos.</p>
+                          <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                            <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                            <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                          </div>
+                        </div>
+                    `;
+
+                    const { error } = await emailService.sendMedicalDocument({
+                        to: patient.email,
+                        subject: `Descripción Quirúrgica – 440 Clinic`,
+                        body: bodyHtml,
+                        pdfBase64: base64data,
+                        pdfFilename: filename,
+                        documentId: patient.id
+                    });
+
+                    if (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    } else {
+                        alert('¡Descripción quirúrgica enviada correctamente!');
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
+        }
     };
 
     const handleSave = async () => {
@@ -250,6 +309,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                                     <label className="form-label">Diagnóstico Pre-Operatorio</label>
                                     <button className="link-btn" style={{ fontSize: '0.8rem' }} onClick={() => { setShowDiagSearch('pre'); setSearchTerm(''); }}><Search size={14} /> Buscar</button>
                                 </div>
+                                <label className="form-label">Diagnóstico Pre-Operatorio</label>
                                 <textarea name="preOpDiagnosis" className="form-input" rows={2} value={formData.preOpDiagnosis} onChange={handleChange} />
                                 {showDiagSearch === 'pre' && (
                                     <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
@@ -362,9 +422,15 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                 </div>
 
                 {/* Footer Actions */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', padding: '1rem 0' }}>
-                    <button className="action-btn" onClick={() => window.print()}>
-                        <Share2 size={18} /> Previsualizar PDF
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', padding: '1rem 0', alignItems: 'center' }}>
+                    {validationError && (
+                        <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: 'auto' }}>
+                            <X size={16} /> {validationError}
+                        </div>
+                    )}
+                    <button className="action-btn" onClick={handleDownload} disabled={generatingPDF}>
+                        {generatingPDF ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                        {generatingPDF ? 'Generando PDF...' : 'Descargar / Enviar PDF'}
                     </button>
                     <button
                         className="action-btn primary"
@@ -412,7 +478,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
             `}</style>
 
             {/* Hidden Print Layout */}
-            <div className="print-only">
+            <div ref={printRef} className="print-only">
                 <PrintLayout title="Descripción Quirúrgica" patient={patient}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10pt', fontSize: '9pt' }}>
                         <div style={{ gridColumn: 'span 2', borderBottom: '1px solid #eee', paddingBottom: '4pt', marginBottom: '4pt' }}>
@@ -471,25 +537,8 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
     );
 };
 
+
 export default SurgicalDescription;
 
-const Check = ({ size, ...props }: any) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...props}
-    >
-        <path d="M20 6 9 17l-5-5" />
-    </svg>
-);
 
-const Share2 = ({ size }: any) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="7.51" y2="11.49" /></svg>
-);
+

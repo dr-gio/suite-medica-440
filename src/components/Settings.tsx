@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '../context/ConfigContext';
 import { Plus, X, Save, ShieldCheck, Loader2, ToggleLeft, ToggleRight, Trash2, FileText, Upload } from 'lucide-react';
-import { getStoredPin, setStoredPin } from './PinLock';
+import { getStoredPin, setStoredPin, getStoredDrGioPin, setStoredDrGioPin } from './PinLock';
 import { supabase } from '../lib/supabase';
 import KnowledgeBaseEditor from './KnowledgeBaseEditor';
 import { DEFAULT_CUPS, DEFAULT_DIAGNOSES } from '../data/cupscie10440';
@@ -106,6 +106,99 @@ const Settings: React.FC = () => {
     );
 };
 
+// PIN Configuration Components
+const PinChangeConfig: React.FC = () => {
+    const [currentPin, setCurrentPin] = useState('');
+    const [newPin, setNewPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
+    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+    const handleChange = () => {
+        setMsg(null);
+        if (currentPin !== getStoredPin()) {
+            setMsg({ text: 'El PIN actual es incorrecto.', ok: false }); return;
+        }
+        if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+            setMsg({ text: 'El nuevo PIN debe tener exactamente 6 dígitos numéricos.', ok: false }); return;
+        }
+        if (newPin !== confirmPin) {
+            setMsg({ text: 'Los PINs no coinciden.', ok: false }); return;
+        }
+        setStoredPin(newPin);
+        setCurrentPin(''); setNewPin(''); setConfirmPin('');
+        setMsg({ text: '✅ PIN actualizado correctamente.', ok: true });
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: '340px' }}>
+            <div>
+                <label className="form-label">PIN Actual</label>
+                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={currentPin} onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ''))} />
+            </div>
+            <div>
+                <label className="form-label">Nuevo PIN (6 dígitos)</label>
+                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))} />
+            </div>
+            <div>
+                <label className="form-label">Confirmar Nuevo PIN</label>
+                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ''))} />
+            </div>
+            {msg && (
+                <p style={{ color: msg.ok ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '0.9rem' }}>{msg.text}</p>
+            )}
+            <button className="action-btn primary" onClick={handleChange} style={{ marginTop: '0.5rem' }}>
+                <ShieldCheck size={16} /> Cambiar PIN
+            </button>
+        </div>
+    );
+};
+
+const DrGioPinChangeConfig: React.FC = () => {
+    const [currentPin, setCurrentPin] = useState('');
+    const [newPin, setNewPin] = useState('');
+    const [confirmPin, setConfirmPin] = useState('');
+    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+
+    const handleChange = () => {
+        setMsg(null);
+        if (currentPin !== getStoredDrGioPin()) {
+            setMsg({ text: 'El PIN actual de Dr. Gio es incorrecto.', ok: false }); return;
+        }
+        if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+            setMsg({ text: 'El nuevo PIN debe tener exactamente 6 dígitos numéricos.', ok: false }); return;
+        }
+        if (newPin !== confirmPin) {
+            setMsg({ text: 'Los PINs no coinciden.', ok: false }); return;
+        }
+        setStoredDrGioPin(newPin);
+        setCurrentPin(''); setNewPin(''); setConfirmPin('');
+        setMsg({ text: '✅ PIN de Dr. Gio actualizado correctamente.', ok: true });
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: '340px' }}>
+            <div>
+                <label className="form-label">PIN Dr. Gio Actual</label>
+                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={currentPin} onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ''))} />
+            </div>
+            <div>
+                <label className="form-label">Nuevo PIN Dr. Gio (6 dígitos)</label>
+                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))} />
+            </div>
+            <div>
+                <label className="form-label">Confirmar Nuevo PIN Dr. Gio</label>
+                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ''))} />
+            </div>
+            {msg && (
+                <p style={{ color: msg.ok ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '0.9rem' }}>{msg.text}</p>
+            )}
+            <button className="action-btn" onClick={handleChange} style={{ marginTop: '0.5rem', backgroundColor: '#6366f1', color: 'white', border: 'none' }}>
+                <ShieldCheck size={16} /> Cambiar PIN Dr. Gio
+            </button>
+        </div>
+    );
+};
+
 // Config Components for each Catalog
 const GeneralConfig: React.FC = () => {
     const { logoUrl, signatureUrl, sealUrl, updateCatalog, updateImagesBatch } = useConfig() as any;
@@ -200,9 +293,15 @@ const GeneralConfig: React.FC = () => {
 
 
             <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
-                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldCheck size={20} /> Seguridad &mdash; PIN de Acceso</h3>
-                <p style={{ color: 'var(--text-muted)' }}>El PIN tiene 6 dígitos y se solicita al abrir la app o al bloquear la sesión. El PIN por defecto es <strong>440440</strong>.</p>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><ShieldCheck size={20} /> Seguridad &mdash; PIN de Acceso (Personal)</h3>
+                <p style={{ color: 'var(--text-muted)' }}>El PIN tiene 6 dígitos y se solicita al abrir la app. PIN por defecto: <strong>440440</strong>.</p>
                 <PinChangeConfig />
+            </div>
+
+            <div className="item-card" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem', border: '1px solid #6366f133', background: '#6366f105' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6366f1' }}><ShieldCheck size={20} /> Seguridad &mdash; PIN Dr. Gio (Especial)</h3>
+                <p style={{ color: 'var(--text-muted)' }}>Este PIN habilita módulos especiales (Incapacidad, Remisiones, Descripción Quirúrgica). PIN configurado: <strong>{getStoredDrGioPin()}</strong>.</p>
+                <DrGioPinChangeConfig />
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -266,52 +365,6 @@ const ContactConfig: React.FC = () => {
                     <button className="action-btn primary" onClick={handleSave}><Save size={18} /> Guardar Datos de Contacto</button>
                 </div>
             </div>
-        </div>
-    );
-};
-
-const PinChangeConfig: React.FC = () => {
-    const [currentPin, setCurrentPin] = useState('');
-    const [newPin, setNewPin] = useState('');
-    const [confirmPin, setConfirmPin] = useState('');
-    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
-
-    const handleChange = () => {
-        setMsg(null);
-        if (currentPin !== getStoredPin()) {
-            setMsg({ text: 'El PIN actual es incorrecto.', ok: false }); return;
-        }
-        if (newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
-            setMsg({ text: 'El nuevo PIN debe tener exactamente 6 dígitos numéricos.', ok: false }); return;
-        }
-        if (newPin !== confirmPin) {
-            setMsg({ text: 'Los PINs no coinciden.', ok: false }); return;
-        }
-        setStoredPin(newPin);
-        setCurrentPin(''); setNewPin(''); setConfirmPin('');
-        setMsg({ text: '✅ PIN actualizado correctamente.', ok: true });
-    };
-
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: '340px' }}>
-            <div>
-                <label className="form-label">PIN Actual</label>
-                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={currentPin} onChange={e => setCurrentPin(e.target.value.replace(/\D/g, ''))} />
-            </div>
-            <div>
-                <label className="form-label">Nuevo PIN (6 dígitos)</label>
-                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))} />
-            </div>
-            <div>
-                <label className="form-label">Confirmar Nuevo PIN</label>
-                <input className="form-input" type="password" maxLength={6} inputMode="numeric" placeholder="••••••" value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ''))} />
-            </div>
-            {msg && (
-                <p style={{ color: msg.ok ? '#22c55e' : '#ef4444', fontWeight: 500, fontSize: '0.9rem' }}>{msg.text}</p>
-            )}
-            <button className="action-btn primary" onClick={handleChange} style={{ marginTop: '0.5rem' }}>
-                <ShieldCheck size={16} /> Cambiar PIN
-            </button>
         </div>
     );
 };

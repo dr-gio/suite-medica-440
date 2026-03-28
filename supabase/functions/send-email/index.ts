@@ -18,11 +18,11 @@ serve(async (req: Request) => {
             Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
         );
 
-        const { to, cc, subject, body, pdfBase64, pdfFilename, documentId } = await req.json();
+        const { to, cc, bcc, subject, body, pdfBase64, pdfFilename, documentId } = await req.json();
 
         if (!to) throw new Error("Recipient 'to' is required");
 
-        console.log(`Sending email to: ${to}${cc ? ` with CC: ${cc}` : ""}`);
+        console.log("Sending email to: " + to + (cc ? " with CC: " + cc : ""));
 
         // Configure SMTP transport
         // Using both SMTP and SMPT to handle potential typos in env vars (from screenshot)

@@ -4,15 +4,15 @@ import { useConfig } from '../context/ConfigContext';
 import { supabase } from '../lib/supabase';
 
 interface Props {
-    patient: { name: string; id: string; date: string; age: string };
+    patient: { name: string; id: string; date: string; age: string; email?: string };
     documentTitle: string;
     onClose: () => void;
 }
 
 const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
-    const { doctorName, rethus, address, contactPhone, websiteUrl } = useConfig();
+    const { doctorName, rethus, contactPhone, websiteUrl } = useConfig();
     const [phone, setPhone] = useState('');
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(patient.email || '');
     const [clinicEmail, setClinicEmail] = useState('historias@440clinic.online');
     const [downloaded, setDownloaded] = useState(false);
     const [loading, setLoading] = useState(false);

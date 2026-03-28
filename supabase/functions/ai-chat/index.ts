@@ -51,8 +51,7 @@ serve(async (req) => {
 
         return new Response(
             JSON.stringify({
-                answer: answer,
-                sources: documents?.slice(0, 1)
+                answer: answer
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )

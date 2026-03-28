@@ -2,8 +2,9 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
 import { supabase } from '../lib/supabase';
-import { Search, Loader2, Check, X, Plus, Download, Printer } from 'lucide-react';
+import { Search, Plus, Trash2, Download, Printer, Loader2, Send, X, Check } from 'lucide-react';
 import { usePDF } from '../hooks/usePDF';
+import { emailService } from '../services/emailService';
 
 interface QuoteService {
     id: string;
@@ -32,9 +33,10 @@ function formatCOP(value: number): string {
 const CATEGORY_ORDER = ['Cirugías Corporales', 'Cirugías Faciales', 'Tecnologías', 'Gastos Adicionales'];
 
 const EconomicProposal: React.FC<Props> = ({ patient }) => {
-    const { doctorName, proposalIntro, proposalPolicies } = useConfig();
+    const { doctorName, proposalIntro, proposalPolicies, rethus, contactPhone } = useConfig();
     const printRef = useRef<HTMLDivElement>(null);
     const { downloadPDF, downloading } = usePDF();
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     const [services, setServices] = useState<QuoteService[]>([]);
     const [loading, setLoading] = useState(true);
@@ -122,11 +124,56 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
     const subtotalAdditional = additionalItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
     const grandTotal = netSurgery + subtotalAdditional;
 
-    const handleDownloadPDF = () => {
+    const handleDownload = async () => {
+        if (!patient.id?.trim() || !patient.email?.trim()) {
+            setValidationError('Faltan datos obligatorios: Documento y Email.');
+            alert('Por favor, ingresa el Documento y el Email del paciente para generar la propuesta.');
+            return;
+        }
+        setValidationError(null);
+
         if (printRef.current) {
-            downloadPDF(printRef.current, `Presupuesto_${patient.name || 'Paciente'}.pdf`, {
+            const filename = `Presupuesto_${patient.name || 'Paciente'}.pdf`;
+            const pdfBlob = await downloadPDF(printRef.current, filename, {
                 margin: [10, 5, 10, 5]
             });
+
+            if (pdfBlob && window.confirm(`¿Deseas enviar este presupuesto por correo a ${patient.email}?`)) {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64data = (reader.result as string).split(',')[1];
+                    
+                    const bodyHtml = `
+                        <div style="font-family:Arial,sans-serif;max-width:600px;margin:10px auto;color:#333;line-height:1.6">
+                          <p>Hola <strong>${patient.name || 'paciente'}</strong>,</p>
+                          <p>Adjunto encontrarás tu <strong>Propuesta Económica</strong> para tu procedimiento en 440 Clinic.</p>
+                          <div style="margin-top:20px; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                            <p style="margin:0"><strong>Médico:</strong> ${doctorName || 'Dr. Giovanni Fuentes'}</p>
+                            <p style="margin:0"><strong>RETHUS:</strong> ${rethus || 'CMC2017-222322'}</p>
+                          </div>
+                          <p>Si tienes alguna duda, puedes contactarnos al 📞 ${contactPhone || '3181800130'}.</p>
+                          <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+                            <p style="margin:0;font-weight:600">440 Clinic by Dr. Gio</p>
+                            <p style="margin:0;color:#666;font-size:14px">La perfecta armonía de tu cuerpo</p>
+                          </div>
+                        </div>
+                    `;
+
+                    try {
+                        await emailService.sendMedicalDocument({
+                            to: patient.email,
+                            subject: `Propuesta Económica - ${patient.name}`,
+                            body: bodyHtml,
+                            pdfBase64: base64data,
+                            pdfFilename: filename
+                        });
+                        alert('Correo enviado exitosamente.');
+                    } catch (error) {
+                        alert('Error al enviar el correo: ' + error);
+                    }
+                };
+                reader.readAsDataURL(pdfBlob);
+            }
         }
     };
 
@@ -141,22 +188,21 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                 minHeight: 'calc(100vh - 70px)',
                 alignItems: 'start'
             }}>
-                {/* Column Left: Catalog and Config */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-                    {/* Header/Config Area */}
-                    <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                        <h2 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1.25rem', fontWeight: 700 }}>
-                            Datos del Presupuesto
-                        </h2>
-                        <div className="form-row">
+                    <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Presupuesto / Propuesta Económica</h2>
+                        {validationError && (
+                            <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <X size={16} /> {validationError}
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
                             <div className="form-group"><label className="form-label">Ubicación</label><input className="form-input" value={location} onChange={e => setLocation(e.target.value)} /></div>
                             <div className="form-group"><label className="form-label">Asesor(a)</label><input className="form-input" value={advisor} onChange={e => setAdvisor(e.target.value)} /></div>
                             <div className="form-group"><label className="form-label">Fecha Cirugía</label><input className="form-input" value={surgeryDate} onChange={e => setSurgeryDate(e.target.value)} /></div>
                         </div>
                     </div>
 
-                    {/* Catalog Selection Area */}
                     <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                         <div style={{ padding: '1.25rem', borderBottom: '1px solid #f1f5f9', backgroundColor: '#fff' }}>
                             <div className="form-group" style={{ position: 'relative', marginBottom: '1.25rem' }}>
@@ -164,7 +210,6 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                                 <input className="form-input" style={{ paddingLeft: '2.8rem', borderRadius: '10px' }} placeholder="Busca servicios o tecnologías..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                             </div>
 
-                            {/* Category Tabs */}
                             <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
                                 {CATEGORY_ORDER.map(cat => {
                                     const count = cart.filter(i => i.service.category === cat).length;
@@ -207,7 +252,6 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                             </div>
                         </div>
 
-                        {/* Service Listing */}
                         <div style={{ padding: '1.5rem', minHeight: '300px' }}>
                             {loading ? <div style={{ textAlign: 'center', padding: '2rem' }}><Loader2 className="spin" /> Cargando catálogo...</div> : (
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
@@ -258,7 +302,6 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                     </div>
                 </div>
 
-                {/* Column Right: Sticky Summary */}
                 <div style={{ position: 'sticky', top: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: 'calc(100vh - 100px)' }}>
                     <div style={{ backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
                         <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -286,7 +329,7 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                                         onClick={() => removeFromCart(item.id)}
                                         style={{ color: '#ef4444', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}
                                     >
-                                        <X size={14} />
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
                             ))}
@@ -320,7 +363,7 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <button
                                     className="action-btn primary"
-                                    onClick={handleDownloadPDF}
+                                    onClick={handleDownload}
                                     disabled={downloading}
                                     style={{ width: '100%', justifyContent: 'center', padding: '0.85rem', borderRadius: '10px', fontSize: '1rem', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}
                                 >
