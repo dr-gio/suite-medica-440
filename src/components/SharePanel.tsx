@@ -112,6 +112,49 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
         setSending(false);
     };
 
+    const registrarEnPortal = async (blob: Blob, filename: string) => {
+        try {
+            const tipoMap: Record<string, string> = {
+                'Solicitud de Laboratorio': 'laboratorio',
+                'Solicitud Laboratorio': 'laboratorio',
+                'Solicitud de Imágenes': 'imagen',
+                'Solicitud Imágenes': 'imagen',
+                'Receta Médica': 'receta',
+                'Receta': 'receta',
+                'Consentimiento Informado': 'consentimiento',
+                'Consentimiento': 'consentimiento',
+                'Propuesta Económica': 'presupuesto',
+                'Descripción Quirúrgica': 'informe',
+                'Incapacidad': 'incapacidad',
+                'Referencia': 'referencia',
+            };
+            const tipo = tipoMap[documentTitle] || 'documento';
+            const path = `${patient.id}/${Date.now()}_${filename}`;
+
+            let urlArchivo: string | undefined;
+            const { data: uploadData } = await supabase.storage
+                .from('documentos-suite')
+                .upload(path, blob, { contentType: 'application/pdf', upsert: false });
+            if (uploadData) {
+                const { data: pub } = supabase.storage.from('documentos-suite').getPublicUrl(path);
+                urlArchivo = pub.publicUrl;
+            }
+
+            await supabase.from('documentos_paciente').insert({
+                cedula_paciente: patient.id,
+                tipo_documento: tipo,
+                nombre_archivo: filename,
+                url_archivo: urlArchivo || null,
+                app_origen: 'suite-medica',
+                generado_por: 'suite',
+                fecha_generacion: new Date().toISOString(),
+                metadata: { documentTitle },
+            });
+        } catch (e) {
+            console.warn('Portal sync error (non-blocking):', e);
+        }
+    };
+
     const handleDownloadPdf = async () => {
         setLoading(true);
         try {
@@ -126,16 +169,24 @@ const SharePanel: React.FC<Props> = ({ patient, documentTitle, onClose }) => {
             const patientSafe = (patient.name || 'documento').replace(/\s+/g, '_');
             const filename = `${documentTitle.replace(/\s+/g, '_')}_${patientSafe}.pdf`;
 
-            await html2pdf()
-                .set({
-                    margin: [10, 10, 10, 10],
-                    filename,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                })
-                .from(printEl)
-                .save();
+            const pdfInstance = html2pdf().set({
+                margin: [10, 10, 10, 10],
+                filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            }).from(printEl);
+
+            const blob: Blob = await pdfInstance.output('blob');
+
+            // Descarga local
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename; a.click();
+            URL.revokeObjectURL(url);
+
+            // Registro en portal (no bloquea)
+            if (patient.id) registrarEnPortal(blob, filename);
 
             setDownloaded(true);
             setTimeout(() => setDownloaded(false), 3000);
