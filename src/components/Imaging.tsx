@@ -278,19 +278,11 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                                 <>
                                     <button 
                                         className="action-btn" 
-                                        onClick={() => {
-                                            const searchInput = document.getElementById('imaging-search-input');
-                                            if (searchInput) {
-                                                searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                setTimeout(() => searchInput.focus(), 500);
-                                            } else {
-                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                            }
-                                        }}
+                                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                         style={{ justifyContent: 'center', background: 'var(--primary)', color: 'white', width: '100%', padding: '0.75rem', fontSize: '1rem', border: 'none' }}
                                     >
                                         <Plus size={18} />
-                                        Buscar en Base de Datos
+                                        Subir a buscar más
                                     </button>
                                     <button 
                                         className="action-btn" 
@@ -298,7 +290,7 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                                         style={{ justifyContent: 'center', borderStyle: 'dashed', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
                                     >
                                         <Plus size={18} />
-                                        Añadir estudio manual
+                                        Añadir en blanco aquí
                                     </button>
                                 </>
                             )}
@@ -469,7 +461,7 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                     }
 
                     .internal-selection-sidebar {
-                        height: 350px;
+                        height: 400px;
                         width: 100%;
                     }
 
