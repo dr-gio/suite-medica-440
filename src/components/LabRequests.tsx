@@ -146,6 +146,7 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
                             <label className="form-label">Buscar Examen</label>
                             <input 
+                                id="lab-search-input"
                                 className="form-input" 
                                 placeholder="Ej: Hemograma..." 
                                 value={searchTerm}
@@ -278,16 +279,34 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                             </div>
                         )}
 
-                        <div className="mobile-only" style={{ padding: '0 0.5rem 2rem 0.5rem' }}>
+                        <div className="mobile-only" style={{ padding: '0 0.5rem 2rem 0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {labs.length > 0 && (
-                                <button 
-                                    className="action-btn" 
-                                    onClick={addCustomLab}
-                                    style={{ justifyContent: 'center', borderStyle: 'dashed', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
-                                >
-                                    <Plus size={18} />
-                                    Añadir otro examen
-                                </button>
+                                <>
+                                    <button 
+                                        className="action-btn" 
+                                        onClick={() => {
+                                            const searchInput = document.getElementById('lab-search-input');
+                                            if (searchInput) {
+                                                searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                setTimeout(() => searchInput.focus(), 500);
+                                            } else {
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }
+                                        }}
+                                        style={{ justifyContent: 'center', background: 'var(--primary)', color: 'white', width: '100%', padding: '0.75rem', fontSize: '1rem', border: 'none' }}
+                                    >
+                                        <Plus size={18} />
+                                        Buscar en Base de Datos
+                                    </button>
+                                    <button 
+                                        className="action-btn" 
+                                        onClick={addCustomLab}
+                                        style={{ justifyContent: 'center', borderStyle: 'dashed', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+                                    >
+                                        <Plus size={18} />
+                                        Añadir examen manual
+                                    </button>
+                                </>
                             )}
                         </div>
                     </div>
