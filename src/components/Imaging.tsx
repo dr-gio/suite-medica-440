@@ -223,42 +223,44 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                         {/* Mobile Cards */}
                         <div className="mobile-only" style={{ flex: 1, overflowY: 'auto' }}>
                             {studies.map((study, index) => (
-                                <div key={index} className="mobile-card">
-                                    <div className="mobile-card-header">
-                                        <div style={{ flex: 1 }}>
-                                            <span className="mobile-card-label">Estudio</span>
+                                <div key={index} className="mobile-card-v2">
+                                    <div className="card-v2-header">
+                                        <span className="card-v2-badge">Imagen / Ayuda #{index + 1}</span>
+                                        <button className="card-v2-remove" onClick={() => removeStudy(index)}>
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="card-v2-body">
+                                        <div className="field-group">
+                                            <label className="field-label">Estudio / Región</label>
                                             <input 
-                                                className="form-input" 
+                                                className="form-input mobile-input" 
                                                 value={study.name} 
                                                 onChange={(e) => updateStudy(index, 'name', e.target.value)}
                                                 placeholder="Nombre del estudio..."
-                                                style={{ border: 'none', padding: '0.25rem 0', fontWeight: 600, fontSize: '1rem', width: '100%' }}
                                             />
                                         </div>
-                                        <button className="remove-btn" onClick={() => removeStudy(index)}><X size={20} /></button>
-                                    </div>
-                                    <div className="mobile-card-row">
-                                        <span className="mobile-card-label">Indicación Médica</span>
-                                        <input 
-                                            className="form-input" 
-                                            value={study.reason} 
-                                            onChange={(e) => updateStudy(index, 'reason', e.target.value)}
-                                            placeholder="Ej: Descartar litiasis"
-                                            style={{ width: '100%' }}
-                                        />
-                                    </div>
-                                    <div className="mobile-card-row">
-                                        <span className="mobile-card-label">Formato</span>
-                                        <select 
-                                            className="form-input" 
-                                            value={study.format} 
-                                            onChange={(e) => updateStudy(index, 'format', e.target.value)}
-                                            style={{ width: '100%' }}
-                                        >
-                                            <option>Digital o Impreso</option>
-                                            <option>Solo Cd / Digital</option>
-                                            <option>Placas Impresas</option>
-                                        </select>
+                                        <div className="field-group">
+                                            <label className="field-label">Indicación Médica</label>
+                                            <input 
+                                                className="form-input mobile-input" 
+                                                value={study.reason} 
+                                                onChange={(e) => updateStudy(index, 'reason', e.target.value)}
+                                                placeholder="Ej: Descartar litiasis"
+                                            />
+                                        </div>
+                                        <div className="field-group">
+                                            <label className="field-label">Formato de Entrega</label>
+                                            <select 
+                                                className="form-input mobile-input" 
+                                                value={study.format} 
+                                                onChange={(e) => updateStudy(index, 'format', e.target.value)}
+                                            >
+                                                <option>Digital o Impreso</option>
+                                                <option>Solo Cd / Digital</option>
+                                                <option>Placas Impresas</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -348,37 +350,75 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                     overflow: hidden;
                 }
 
-                .mobile-card {
+                .mobile-card-v2 {
                     background: var(--surface);
                     border: 1px solid var(--border-color);
-                    border-radius: 12px;
-                    padding: 1rem;
-                    margin-bottom: 1rem;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                    border-radius: 16px;
+                    margin-bottom: 1.25rem;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
                 }
 
-                .mobile-card-header {
+                .card-v2-header {
                     display: flex;
                     justify-content: space-between;
-                    align-items: flex-start;
-                    margin-bottom: 0.75rem;
+                    align-items: center;
+                    padding: 0.75rem 1rem;
+                    background: var(--bg-main);
+                    border-bottom: 1px solid var(--border-color);
+                }
+
+                .card-v2-badge {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: var(--primary);
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .card-v2-remove {
+                    background: none;
+                    border: none;
+                    color: #ef4444;
+                    padding: 4px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    opacity: 0.8;
+                }
+
+                .card-v2-remove:active {
+                    opacity: 1;
+                    transform: scale(0.9);
+                }
+
+                .card-v2-body {
+                    padding: 1.25rem;
+                    display: flex;
+                    flex-direction: column;
                     gap: 1rem;
                 }
 
-                .mobile-card-label {
-                    display: block;
+                .field-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.4rem;
+                }
+
+                .field-label {
                     font-size: 0.7rem;
                     font-weight: 700;
-                    text-transform: uppercase;
                     color: var(--text-muted);
-                    margin-bottom: 0.25rem;
+                    text-transform: uppercase;
                     letter-spacing: 0.025em;
                 }
 
-                .mobile-card-row {
-                    margin-top: 0.75rem;
-                    padding-top: 0.75rem;
-                    border-top: 1px solid var(--border-color);
+                .mobile-input {
+                    padding: 0.6rem 0.8rem !important;
+                    font-size: 0.9rem !important;
+                    background: var(--bg-main) !important;
+                    border: 1px solid var(--border-color) !important;
                 }
 
                 @media (max-width: 1024px) {

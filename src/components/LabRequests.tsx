@@ -207,29 +207,32 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                         {/* Mobile Cards */}
                         <div className="mobile-only" style={{ flex: 1, overflowY: 'auto' }}>
                             {labs.map((lab, index) => (
-                                <div key={index} className="mobile-card">
-                                    <div className="mobile-card-header">
-                                        <div style={{ flex: 1 }}>
-                                            <span className="mobile-card-label">Examen</span>
+                                <div key={index} className="mobile-card-v2">
+                                    <div className="card-v2-header">
+                                        <span className="card-v2-badge">Laboratorio #{index + 1}</span>
+                                        <button className="card-v2-remove" onClick={() => removeLab(index)}>
+                                            <X size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="card-v2-body">
+                                        <div className="field-group">
+                                            <label className="field-label">Nombre del Examen</label>
                                             <input 
-                                                className="form-input" 
+                                                className="form-input mobile-input" 
                                                 value={lab.name} 
                                                 onChange={(e) => updateLab(index, 'name', e.target.value)}
-                                                placeholder="Nombre del examen..."
-                                                style={{ border: 'none', padding: '0.25rem 0', fontWeight: 600, fontSize: '1rem', width: '100%' }}
+                                                placeholder="Ej: Hemograma completo"
                                             />
                                         </div>
-                                        <button className="remove-btn" onClick={() => removeLab(index)}><X size={20} /></button>
-                                    </div>
-                                    <div className="mobile-card-row">
-                                        <span className="mobile-card-label">Indicaciones Especiales</span>
-                                        <input 
-                                            className="form-input" 
-                                            value={lab.indications} 
-                                            onChange={(e) => updateLab(index, 'indications', e.target.value)}
-                                            placeholder="Ej: Ayuno de 8 horas"
-                                            style={{ width: '100%' }}
-                                        />
+                                        <div className="field-group">
+                                            <label className="field-label">Indicaciones Especiales</label>
+                                            <input 
+                                                className="form-input mobile-input" 
+                                                value={lab.indications} 
+                                                onChange={(e) => updateLab(index, 'indications', e.target.value)}
+                                                placeholder="Ej: Ayuno de 8 horas"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -318,37 +321,75 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                     overflow: hidden;
                 }
 
-                .mobile-card {
+                .mobile-card-v2 {
                     background: var(--surface);
                     border: 1px solid var(--border-color);
-                    border-radius: 12px;
-                    padding: 1rem;
-                    margin-bottom: 1rem;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                    border-radius: 16px;
+                    margin-bottom: 1.25rem;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
                 }
 
-                .mobile-card-header {
+                .card-v2-header {
                     display: flex;
                     justify-content: space-between;
-                    align-items: flex-start;
-                    margin-bottom: 0.75rem;
+                    align-items: center;
+                    padding: 0.75rem 1rem;
+                    background: var(--bg-main);
+                    border-bottom: 1px solid var(--border-color);
+                }
+
+                .card-v2-badge {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: var(--primary);
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+
+                .card-v2-remove {
+                    background: none;
+                    border: none;
+                    color: #ef4444;
+                    padding: 4px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    opacity: 0.8;
+                }
+
+                .card-v2-remove:active {
+                    opacity: 1;
+                    transform: scale(0.9);
+                }
+
+                .card-v2-body {
+                    padding: 1.25rem;
+                    display: flex;
+                    flex-direction: column;
                     gap: 1rem;
                 }
 
-                .mobile-card-label {
-                    display: block;
+                .field-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.4rem;
+                }
+
+                .field-label {
                     font-size: 0.7rem;
                     font-weight: 700;
-                    text-transform: uppercase;
                     color: var(--text-muted);
-                    margin-bottom: 0.25rem;
+                    text-transform: uppercase;
                     letter-spacing: 0.025em;
                 }
 
-                .mobile-card-row {
-                    margin-top: 0.75rem;
-                    padding-top: 0.75rem;
-                    border-top: 1px solid var(--border-color);
+                .mobile-input {
+                    padding: 0.6rem 0.8rem !important;
+                    font-size: 0.9rem !important;
+                    background: var(--bg-main) !important;
+                    border: 1px solid var(--border-color) !important;
                 }
 
                 @media (max-width: 1024px) {
