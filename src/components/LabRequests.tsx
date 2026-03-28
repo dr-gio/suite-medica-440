@@ -165,7 +165,7 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                     {/* Requested List */}
                     <div className="selected-items-container">
                         {/* Desktop Table */}
-                        <div className="desktop-only table-container" style={{ flex: 1, overflowY: 'auto', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                        <div className="desktop-only table-container" style={{ flex: 1, overflowY: 'auto', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-main)', zIndex: 1, borderBottom: '1px solid var(--border-color)' }}>
                                     <tr>
@@ -236,7 +236,7 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                         </div>
 
                         {labs.length === 0 && (
-                            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', background: 'white', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                 Selecciona exámenes de la lista para solicitarlos.
                             </div>
                         )}
@@ -316,6 +316,39 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                     flex-direction: column;
                     gap: 1rem;
                     overflow: hidden;
+                }
+
+                .mobile-card {
+                    background: var(--surface);
+                    border: 1px solid var(--border-color);
+                    border-radius: 12px;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                }
+
+                .mobile-card-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 0.75rem;
+                    gap: 1rem;
+                }
+
+                .mobile-card-label {
+                    display: block;
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    color: var(--text-muted);
+                    margin-bottom: 0.25rem;
+                    letter-spacing: 0.025em;
+                }
+
+                .mobile-card-row {
+                    margin-top: 0.75rem;
+                    padding-top: 0.75rem;
+                    border-top: 1px solid var(--border-color);
                 }
 
                 @media (max-width: 1024px) {
