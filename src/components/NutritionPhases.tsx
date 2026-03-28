@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, X } from 'lucide-react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
 import { usePDF } from '../hooks/usePDF';
@@ -93,7 +93,7 @@ const NutritionPhases: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Recomendaciones Nutricionales (Fases)</h2>
                     {validationError && (
                         <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

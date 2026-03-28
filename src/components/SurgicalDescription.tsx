@@ -214,7 +214,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                 </div>
 
                 {/* Form Sections */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div className="surgical-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
 
                     {/* General Information */}
                     <div className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
@@ -271,7 +271,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                     </div>
 
                     {/* Diagnoses */}
-                    <div className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', gridColumn: 'span 2' }}>
+                    <div className="item-card surgical-full-width" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', gridColumn: 'span 2' }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary)' }}>
                             <Clipboard size={18} /> Diagnósticos y Procedimiento
                         </h3>
@@ -347,7 +347,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                     </div>
 
                     {/* Description Details */}
-                    <div className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', gridColumn: 'span 2' }}>
+                    <div className="item-card surgical-full-width" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', gridColumn: 'span 2' }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary)' }}>
                             <FileText size={18} /> Descripción del Acto Quirúrgico
                         </h3>
@@ -380,7 +380,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                     </div>
 
                     {/* Control and Closure */}
-                    <div className="item-card" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', gridColumn: 'span 2' }}>
+                    <div className="item-card surgical-full-width" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1rem', gridColumn: 'span 2' }}>
                         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', color: 'var(--primary)' }}>
                             <Check size={18} /> Cierre y Resultados
                         </h3>
@@ -474,6 +474,14 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                 }
                 .link-btn:hover {
                     text-decoration: underline;
+                }
+                @media (max-width: 768px) {
+                    .surgical-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .surgical-full-width {
+                        grid-column: span 1 !important;
+                    }
                 }
             `}</style>
 

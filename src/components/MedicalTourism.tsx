@@ -256,7 +256,7 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
                             </div>
                         </div>
 
-                        <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="mb-4 date-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                             <div className="form-group">
                                 <label className="form-label">Fecha Llegada</label>
                                 <input
@@ -435,9 +435,14 @@ const MedicalTourism: React.FC<Props> = ({ patient }) => {
             <style>{`
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 .spin { animation: spin 1s linear infinite; }
-                
+
                 @media (max-width: 900px) {
                     .builder-layout {
+                        grid-template-columns: 1fr !important;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .date-grid {
                         grid-template-columns: 1fr !important;
                     }
                 }

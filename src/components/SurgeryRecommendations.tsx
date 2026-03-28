@@ -152,7 +152,7 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Recomendaciones Quirúrgicas</h2>
                     {validationError && (
                         <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -184,7 +184,7 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
                 {/* Pre tab */}
                 {activeTab === 'pre' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                             <label className="form-label" style={{ margin: 0 }}>Instrucciones Preoperatorias</label>
                             <button
                                 className="action-btn primary"
@@ -209,7 +209,7 @@ const SurgeryRecommendations: React.FC<Props> = ({ patient }) => {
                 {/* Post tab */}
                 {activeTab === 'post' && (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                             <label className="form-label" style={{ margin: 0 }}>Instrucciones Postoperatorias</label>
                             <button
                                 className="action-btn primary"

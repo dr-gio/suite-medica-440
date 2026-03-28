@@ -289,14 +289,14 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
     return (
         <div className="tool-view">
             <div className="form-section no-print" style={{ flex: 1, border: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem' }}>
+                <div className="consent-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '0 1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Consentimiento Informado</h2>
                     {validationError && (
                         <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <X size={16} /> {validationError}
                         </div>
                     )}
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <button
                             className="action-btn"
                             onClick={handleSaveAndSend}
@@ -380,12 +380,12 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                 </div>
 
                 <div style={{ marginTop: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                         <h3 className="form-label" style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                             <History size={18} /> Historial de Consentimientos
                         </h3>
                         {history.length > 0 && (
-                            <div style={{ position: 'relative', width: '250px' }}>
+                            <div style={{ position: 'relative', width: '250px', flexShrink: 0, maxWidth: '100%' }}>
                                 <input
                                     type="text"
                                     placeholder="Buscar por paciente o procedimiento..."
@@ -419,7 +419,7 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                             }
 
                             return filteredHistory.map(item => (
-                                <div key={item.id} className="item-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)' }}>
+                                <div key={item.id} className="item-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)', flexWrap: 'wrap', gap: '0.5rem' }}>
                                     <div>
                                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{item.title}</div>
                                         <div style={{ fontWeight: 500, fontSize: '0.85rem', color: '#3b82f6', marginTop: '2px', marginBottom: '4px' }}>
@@ -529,6 +529,19 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
             <style>{`
                 .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @media (max-width: 768px) {
+                    .consent-header-row {
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                    }
+                    .consent-header-row > div {
+                        width: 100%;
+                    }
+                    .consent-header-row > div > button {
+                        flex: 1;
+                        justify-content: center;
+                    }
+                }
             `}</style>
 
             {/* View Signed Consent Modal */}
