@@ -83,7 +83,7 @@ function Dashboard() {
     { id: 'medical-tourism', label: 'Turismo Médico', icon: <MapPin size={20} /> },
     { id: 'surgery-results', label: '📸 Resultados', icon: <ImageIcon size={20} /> },
     { id: 'sales-tools', label: 'Herramientas Vtas', icon: <FolderOpen size={20} /> },
-    { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} /> },
+    { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} />, restricted: true },
   ].filter(item => !item.restricted || isDrGio);
 
   const renderContent = () => {
@@ -117,7 +117,7 @@ function Dashboard() {
       case 'sales-tools':
         return <SalesTools />;
       case 'settings':
-        return <Settings />;
+        return isDrGio ? <Settings /> : <Navigate to="/" replace />;
       default:
         return <Prescriptions patient={patient} />;
     }
