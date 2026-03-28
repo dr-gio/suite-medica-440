@@ -46,6 +46,7 @@ function Dashboard() {
           if (!data) return;
           localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
           localStorage.setItem('isDrGio', (data.portal_rol === 'dr_gio').toString());
+          localStorage.setItem('isSara', (data.nombre?.toLowerCase().includes('sara')).toString());
           supabase.from('portal_sesiones').update({ usado: true }).eq('token', pt);
           setSsoOk(true);
           window.history.replaceState({}, '', window.location.pathname);
@@ -55,6 +56,7 @@ function Dashboard() {
   const [showShare, setShowShare] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isDrGio = localStorage.getItem('isDrGio') === 'true';
+  const isSara = localStorage.getItem('isSara') === 'true';
 
   const [patient, setPatient] = useState({
     name: 'Juan Pérez',
@@ -83,8 +85,12 @@ function Dashboard() {
     { id: 'medical-tourism', label: 'Turismo Médico', icon: <MapPin size={20} /> },
     { id: 'surgery-results', label: '📸 Resultados', icon: <ImageIcon size={20} /> },
     { id: 'sales-tools', label: 'Herramientas Vtas', icon: <FolderOpen size={20} /> },
-    { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} />, restricted: true },
-  ].filter(item => !item.restricted || isDrGio);
+    { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} />, requiresSettings: true },
+  ].filter(item => {
+    if (item.restricted) return isDrGio;
+    if (item.requiresSettings) return isDrGio || isSara;
+    return true;
+  });
 
   const renderContent = () => {
     switch (activeTab) {
@@ -117,7 +123,7 @@ function Dashboard() {
       case 'sales-tools':
         return <SalesTools />;
       case 'settings':
-        return isDrGio ? <Settings /> : <Navigate to="/" replace />;
+        return (isDrGio || isSara) ? <Settings /> : <Navigate to="/" replace />;
       default:
         return <Prescriptions patient={patient} />;
     }

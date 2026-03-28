@@ -67,6 +67,7 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
             if (data) {
                 localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
                 localStorage.setItem('isDrGio', (data.rol === 'dr_gio').toString());
+                localStorage.setItem('isSara', (pin === '0920').toString());
                 onUnlock();
             } else {
                 setError(true);
@@ -80,6 +81,7 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
             if (pin === stored || pin === storedDrGio) {
                 localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
                 localStorage.setItem('isDrGio', (pin === storedDrGio).toString());
+                localStorage.setItem('isSara', (pin === '0920').toString());
                 onUnlock();
             } else {
                 setError(true);
