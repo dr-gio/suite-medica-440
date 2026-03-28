@@ -246,7 +246,7 @@ const GeneralConfig: React.FC = () => {
                 <p style={{ color: 'var(--text-muted)' }}>Carga una imagen para el membrete y el encabezado lateral de la aplicación (Se recomienda formato PNG horizontal sin fondo).</p>
 
                 {logo && (
-                    <div style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'white' }}>
+                    <div style={{ padding: '1rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--surface)' }}>
                         <img src={logo} alt="Logo Prev" style={{ maxHeight: '80px', maxWidth: '300px', objectFit: 'contain' }} />
                     </div>
                 )}

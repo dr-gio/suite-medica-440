@@ -197,7 +197,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                             <BookOpen size={18} /> Cargar Plantilla
                         </button>
                         {showTemplates && (
-                            <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: '110%', width: '300px', zIndex: 100, background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', border: '1px solid var(--border-color)', padding: '0.5rem', maxHeight: '400px', overflowY: 'auto', color: '#111827' }}>
+                            <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: '110%', width: '300px', zIndex: 100, background: 'var(--surface)', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', border: '1px solid var(--border-color)', padding: '0.5rem', maxHeight: '400px', overflowY: 'auto', color: 'var(--text-main)' }}>
                                 <div style={{ padding: '0.5rem', fontWeight: 600, borderBottom: '1px solid #eee', marginBottom: '0.5rem', color: '#111827' }}>Tus Plantillas</div>
                                 {surgicalTemplates.length === 0 ? (
                                     <p style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>No hay plantillas configuradas.</p>
@@ -283,7 +283,7 @@ const SurgicalDescription: React.FC<SurgicalDescriptionProps> = ({ patient }) =>
                                     <button className="action-btn" title="Buscar CUPS" onClick={() => { setShowSurgerySearch(!showSurgerySearch); setSearchTerm(''); }}><Search size={18} /></button>
                                 </div>
                                 {showSurgerySearch && (
-                                    <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, width: '360px', zIndex: 10, background: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
+                                    <div className="search-dropdown" style={{ position: 'absolute', top: '100%', left: 0, width: '360px', zIndex: 10, background: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '8px', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '0.5rem' }}>
                                         <input autoFocus className="form-input" placeholder="Buscar cirugía o código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ marginBottom: '0.5rem' }} />
                                         <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
                                             {frequentSurgeries.filter(s =>

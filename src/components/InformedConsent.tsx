@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Download, Loader2, Save, FileText, Check, Send, History, ExternalLink, Trash2 } from 'lucide-react';
+import { X, Download, Loader2, Send, History, ExternalLink, Trash2 } from 'lucide-react';
 import { emailService } from '../services/emailService';
 import { supabase } from '../lib/supabase';
 import PrintLayout from './PrintLayout';
@@ -405,7 +405,7 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                         {loadingHistory ? (
                             <div style={{ textAlign: 'center', padding: '1rem', color: '#64748b' }}>Cargando historial...</div>
                         ) : history.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '1rem', color: '#64748b', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #e2e8f0' }}>No hay consentimientos previos.</div>
+                            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', background: 'var(--bg-main)', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>No hay consentimientos previos.</div>
                         ) : (() => {
                             const filteredHistory = history.filter(item => {
                                 const patientName = item.content?.patient_name || item.signer_full_name || '';
@@ -419,7 +419,7 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                             }
 
                             return filteredHistory.map(item => (
-                                <div key={item.id} className="item-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
+                                <div key={item.id} className="item-card" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface)' }}>
                                     <div>
                                         <div style={{ fontWeight: 600, color: '#1e293b' }}>{item.title}</div>
                                         <div style={{ fontWeight: 500, fontSize: '0.85rem', color: '#3b82f6', marginTop: '2px', marginBottom: '4px' }}>
@@ -429,8 +429,8 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                                             Enviado: {new Date(item.sent_at).toLocaleDateString()} | Estado:
                                             <span style={{
                                                 marginLeft: '4px', padding: '2px 8px', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 600,
-                                                backgroundColor: item.status === 'signed' ? '#dcfce7' : item.status === 'viewed' ? '#fef9c3' : '#f1f5f9',
-                                                color: item.status === 'signed' ? '#166534' : item.status === 'viewed' ? '#854d0e' : '#475569'
+                                                backgroundColor: item.status === 'signed' ? 'rgba(16, 185, 129, 0.2)' : item.status === 'viewed' ? 'rgba(245, 158, 11, 0.2)' : 'var(--bg-main)',
+                                                color: item.status === 'signed' ? '#10b981' : item.status === 'viewed' ? '#f59e0b' : 'var(--text-muted)'
                                             }}>
                                                 {item.status.toUpperCase()}
                                             </span>
@@ -545,16 +545,17 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                         padding: '2rem'
                     }}>
                         <div style={{
-                            backgroundColor: 'white', borderRadius: '16px',
+                            backgroundColor: 'var(--surface)', borderRadius: '16px',
                             width: '100%', maxWidth: '800px', maxHeight: '90vh',
                             display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)'
+                            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                            border: '1px solid var(--border-color)'
                         }}>
-                            <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc' }}>
+                            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-main)' }}>
                                 <h3 style={{ margin: 0, color: '#1e293b', fontSize: '1.25rem' }}>Consentimiento Firmado</h3>
                                 <button onClick={() => setViewingConsent(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b' }}>&times;</button>
                             </div>
-                            <div id="signed-consent-print-area" style={{ overflowY: 'auto', padding: '2rem', flex: 1, backgroundColor: 'white' }}>
+                            <div id="signed-consent-print-area" style={{ overflowY: 'auto', padding: '2rem', flex: 1, backgroundColor: 'white', color: '#111827' }}>
                                 <PrintLayout
                                     patient={{ name: viewingConsent.signer_full_name || patient.name, id: viewingConsent.signer_document_id || patient.id, age: patient.age }}
                                     title={(viewingConsent.title || 'Consentimiento').toUpperCase()}
@@ -608,7 +609,7 @@ const InformedConsent: React.FC<Props> = ({ patient }) => {
                             </div>
 
                             {/* Modal Footer (Actions) */}
-                            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', flexWrap: 'wrap', gap: '1rem' }}>
+                            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-main)', flexWrap: 'wrap', gap: '1rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
                                     <input
                                         type="email"
