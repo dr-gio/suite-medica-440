@@ -277,6 +277,19 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                                 Selecciona exámenes de la lista para solicitarlos.
                             </div>
                         )}
+
+                        <div className="mobile-only" style={{ padding: '0 0.5rem 2rem 0.5rem' }}>
+                            {labs.length > 0 && (
+                                <button 
+                                    className="action-btn" 
+                                    onClick={addCustomLab}
+                                    style={{ justifyContent: 'center', borderStyle: 'dashed', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+                                >
+                                    <Plus size={18} />
+                                    Añadir otro examen
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

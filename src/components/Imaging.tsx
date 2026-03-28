@@ -271,6 +271,19 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                                 Selecciona estudios de la lista para solicitarlos.
                             </div>
                         )}
+
+                        <div className="mobile-only" style={{ padding: '0 0.5rem 2rem 0.5rem' }}>
+                            {studies.length > 0 && (
+                                <button 
+                                    className="action-btn" 
+                                    onClick={addCustomStudy}
+                                    style={{ justifyContent: 'center', borderStyle: 'dashed', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+                                >
+                                    <Plus size={18} />
+                                    Añadir otro estudio
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
