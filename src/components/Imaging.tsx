@@ -119,7 +119,7 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                     <input className="form-input" placeholder="Ej: Dolor abdominal en estudio" value={dx} onChange={(e) => setDx(e.target.value)} />
                 </div>
 
-                <div className="responsive-split-view" style={{ height: 'calc(100vh - 350px)' }}>
+                <div className="responsive-split-view">
                     {/* Selection Sidebar */}
                     <div className="internal-selection-sidebar">
                         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>

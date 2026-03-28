@@ -140,7 +140,7 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                 <div className="form-group" style={{ marginBottom: '1.5rem', padding: '0 1rem' }}>
                     <label className="form-label">Diagnóstico Clínico (Requerido para EPS/Prepaga)</label>
                     <input className="form-input" placeholder="Ej: Control Post-operatorio" value={dx} onChange={(e) => setDx(e.target.value)} />
-                </div>                <div className="responsive-split-view" style={{ height: 'calc(100vh - 350px)' }}>
+                </div>                <div className="responsive-split-view">
                     {/* Selection Sidebar */}
                     <div className="internal-selection-sidebar">
                         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
