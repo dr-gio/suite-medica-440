@@ -62,7 +62,7 @@ const SurgeryResults: React.FC = () => {
                                 alignItems: 'stretch',
                                 gap: '1rem',
                                 padding: '1.5rem',
-                                background: 'white',
+                                background: 'var(--surface)',
                                 borderRadius: '16px',
                                 border: '1px solid var(--border-color)',
                                 boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
