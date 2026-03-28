@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { Stethoscope, ActivitySquare, Pill, ClipboardList, Utensils, Printer, Settings as SettingsIcon, TestTube, Plane, CalendarClock, Send, Lock, Share2, Menu, X, Wallet, FolderOpen, FileText, Image as ImageIcon, MapPin } from 'lucide-react';
@@ -28,7 +28,30 @@ import ConsentSigningPage from './components/ConsentSigningPage';
 function Dashboard() {
   const { logoUrl } = useConfig();
   const { locked, lock } = useAutoLock();
+  const [ssoOk, setSsoOk] = useState(false);
   const [activeTab, setActiveTab] = useState('prescriptions');
+
+  // SSO: auto-login desde portal-440clinic
+  useEffect(() => {
+    const pt = new URLSearchParams(window.location.search).get('pt');
+    if (!pt) return;
+    import('./lib/supabase').then(({ supabase }) => {
+      supabase.from('portal_sesiones')
+        .select('portal_rol, nombre')
+        .eq('token', pt)
+        .eq('usado', false)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle()
+        .then(({ data }) => {
+          if (!data) return;
+          localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
+          localStorage.setItem('isDrGio', (data.portal_rol === 'dr_gio').toString());
+          supabase.from('portal_sesiones').update({ usado: true }).eq('token', pt);
+          setSsoOk(true);
+          window.history.replaceState({}, '', window.location.pathname);
+        });
+    });
+  }, []);
   const [showShare, setShowShare] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isDrGio = localStorage.getItem('isDrGio') === 'true';
@@ -104,7 +127,7 @@ function Dashboard() {
 
   return (
     <div className="app-container">
-      {locked && <PinLock onUnlock={() => { localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString()); window.location.reload(); }} />}
+      {locked && !ssoOk && <PinLock onUnlock={() => { localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString()); window.location.reload(); }} />}
       <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)}></div>
       <aside className={`sidebar no-print ${sidebarOpen ? 'open' : ''}`}>
         <div className="brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '1.5rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1.5rem', gap: '1rem' }}>
