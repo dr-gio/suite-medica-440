@@ -54,18 +54,38 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
         setError(false);
     };
 
-    const validate = (pin: string) => {
-        const stored = getStoredPin();
-        const storedDrGio = getStoredDrGioPin();
-        
-        if (pin === stored || pin === storedDrGio) {
-            localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
-            localStorage.setItem('isDrGio', (pin === storedDrGio).toString());
-            onUnlock();
-        } else {
-            setError(true);
-            setShake(true);
-            setTimeout(() => { setShake(false); setInput(''); }, 600);
+    const validate = async (pin: string) => {
+        try {
+            const { supabase } = await import('../lib/supabase');
+            const { data } = await supabase
+                .from('portal_usuarios')
+                .select('rol')
+                .eq('pin', pin)
+                .eq('activo', true)
+                .maybeSingle();
+
+            if (data) {
+                localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
+                localStorage.setItem('isDrGio', (data.rol === 'dr_gio').toString());
+                onUnlock();
+            } else {
+                setError(true);
+                setShake(true);
+                setTimeout(() => { setShake(false); setInput(''); }, 600);
+            }
+        } catch {
+            // Fallback a PINs locales si Supabase falla
+            const stored = getStoredPin();
+            const storedDrGio = getStoredDrGioPin();
+            if (pin === stored || pin === storedDrGio) {
+                localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
+                localStorage.setItem('isDrGio', (pin === storedDrGio).toString());
+                onUnlock();
+            } else {
+                setError(true);
+                setShake(true);
+                setTimeout(() => { setShake(false); setInput(''); }, 600);
+            }
         }
     };
 
