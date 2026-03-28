@@ -278,7 +278,10 @@ const Imaging: React.FC<Props> = ({ patient }) => {
                                 <>
                                     <button 
                                         className="action-btn" 
-                                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                        onClick={() => {
+                                            const mainContent = document.querySelector('.main-content');
+                                            if (mainContent) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
                                         style={{ justifyContent: 'center', background: 'var(--primary)', color: 'white', width: '100%', padding: '0.75rem', fontSize: '1rem', border: 'none' }}
                                     >
                                         <Plus size={18} />
