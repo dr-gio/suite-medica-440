@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import PrintLayout from './PrintLayout';
 import { useConfig } from '../context/ConfigContext';
 import { supabase } from '../lib/supabase';
-import { Search, Plus, Trash2, Download, Printer, Loader2, Send, X, Check } from 'lucide-react';
+import { Search, Plus, Trash2, Download, Printer, Loader2, X, Check } from 'lucide-react';
 import { usePDF } from '../hooks/usePDF';
 import { emailService } from '../services/emailService';
 
@@ -184,27 +184,27 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                 gridTemplateColumns: '1fr 380px',
                 gap: '2rem',
                 padding: '1.5rem',
-                backgroundColor: '#f8fafc',
+                backgroundColor: 'var(--bg-main)',
                 minHeight: 'calc(100vh - 70px)',
                 alignItems: 'start'
             }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                         <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>Presupuesto / Propuesta Económica</h2>
                         {validationError && (
                             <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <X size={16} /> {validationError}
                             </div>
                         )}
-                        <div style={{ display: 'flex', gap: '0.75rem' }}>
-                            <div className="form-group"><label className="form-label">Ubicación</label><input className="form-input" value={location} onChange={e => setLocation(e.target.value)} /></div>
-                            <div className="form-group"><label className="form-label">Asesor(a)</label><input className="form-input" value={advisor} onChange={e => setAdvisor(e.target.value)} /></div>
-                            <div className="form-group"><label className="form-label">Fecha Cirugía</label><input className="form-input" value={surgeryDate} onChange={e => setSurgeryDate(e.target.value)} /></div>
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                            <div className="form-group" style={{ minWidth: '150px' }}><label className="form-label">Ubicación</label><input className="form-input" value={location} onChange={e => setLocation(e.target.value)} /></div>
+                            <div className="form-group" style={{ minWidth: '150px' }}><label className="form-label">Asesor(a)</label><input className="form-input" value={advisor} onChange={e => setAdvisor(e.target.value)} /></div>
+                            <div className="form-group" style={{ minWidth: '150px' }}><label className="form-label">Fecha Cirugía</label><input className="form-input" value={surgeryDate} onChange={e => setSurgeryDate(e.target.value)} /></div>
                         </div>
                     </div>
 
-                    <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                        <div style={{ padding: '1.25rem', borderBottom: '1px solid #f1f5f9', backgroundColor: '#fff' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                        <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--surface)' }}>
                             <div className="form-group" style={{ position: 'relative', marginBottom: '1.25rem' }}>
                                 <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                                 <input className="form-input" style={{ paddingLeft: '2.8rem', borderRadius: '10px' }} placeholder="Busca servicios o tecnologías..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
@@ -222,8 +222,8 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                                                 padding: '0.6rem 1rem',
                                                 borderRadius: '8px',
                                                 border: 'none',
-                                                backgroundColor: isActive ? 'var(--primary)' : '#f1f5f9',
-                                                color: isActive ? 'white' : '#64748b',
+                                                backgroundColor: isActive ? 'var(--primary)' : 'var(--bg-main)',
+                                                color: isActive ? 'white' : 'var(--text-muted)',
                                                 fontSize: '0.85rem',
                                                 fontWeight: 600,
                                                 whiteSpace: 'nowrap',
@@ -261,15 +261,15 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                                             <div key={svc.id} onClick={() => toggleCartItem(svc)} style={{
                                                 padding: '1rem',
                                                 borderRadius: '12px',
-                                                border: isSelected ? '1px solid var(--primary)' : '1px solid #f1f5f9',
+                                                border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-color)',
                                                 cursor: 'pointer',
                                                 fontSize: '0.85rem',
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 gap: '0.5rem',
-                                                backgroundColor: isSelected ? '#eff6ff' : 'white',
+                                                backgroundColor: isSelected ? 'var(--primary-light)' : 'var(--surface)',
                                                 transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                borderLeft: isSelected ? '4px solid var(--primary)' : '1px solid #f1f5f9',
+                                                borderLeft: isSelected ? '4px solid var(--primary)' : '1px solid var(--border-color)',
                                                 boxShadow: isSelected ? '0 4px 6px rgba(37, 99, 235, 0.08)' : '0 1px 2px rgba(0,0,0,0.03)',
                                                 transform: isSelected ? 'scale(1.02)' : 'scale(1)',
                                                 position: 'relative'
@@ -303,15 +303,15 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                 </div>
 
                 <div style={{ position: 'sticky', top: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: 'calc(100vh - 100px)' }}>
-                    <div style={{ backgroundColor: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                        <div style={{ padding: '1.25rem', backgroundColor: '#f8fafc', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                        <div style={{ padding: '1.25rem', backgroundColor: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Resumen de Presupuesto</h3>
                             <span style={{ fontSize: '0.75rem', backgroundColor: 'var(--primary)', color: 'white', padding: '2px 8px', borderRadius: '12px' }}>{cart.length} ítems</span>
                         </div>
 
                         <div style={{ padding: '1rem', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {cart.map((item) => (
-                                <div key={item.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', borderRadius: '8px', border: '1px solid #f1f5f9', backgroundColor: '#fff', alignItems: 'flex-start' }}>
+                                <div key={item.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--surface)', alignItems: 'flex-start' }}>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: 600, fontSize: '0.82rem', color: '#1e293b' }}>{item.service.name}</div>
                                         <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{item.service.category}</div>
@@ -340,7 +340,7 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                             )}
                         </div>
 
-                        <div style={{ padding: '1.25rem', borderTop: '2px solid #f1f5f9', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ padding: '1.25rem', borderTop: '2px solid var(--border-color)', backgroundColor: 'var(--surface)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#64748b' }}>
                                     <span>Subtotal:</span>
@@ -355,8 +355,8 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderTop: '1px solid #f1f5f9', marginTop: '0.5rem' }}>
-                                <span style={{ fontWeight: 700, color: '#1e293b' }}>INVERSIÓN TOTAL:</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', borderTop: '1px solid var(--border-color)', marginTop: '0.5rem' }}>
+                                <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>INVERSIÓN TOTAL:</span>
                                 <span style={{ fontWeight: 800, fontSize: '1.3rem', color: 'var(--primary)' }}>{formatCOP(grandTotal)}</span>
                             </div>
 
@@ -467,13 +467,27 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
                 .catalog-item-card:active {
                     transform: scale(0.98);
                 }
-                @media (max-width: 1100px) {
+                 @media (max-width: 1100px) {
                     .builder-layout {
                         grid-template-columns: 1fr !important;
+                        gap: 1.5rem !important;
+                        padding: 1rem !important;
                     }
                     .builder-layout > div:last-child {
                         position: static !important;
                         max-height: none !important;
+                    }
+                }
+                @media (max-width: 600px) {
+                    .builder-layout {
+                        padding: 0.5rem !important;
+                        gap: 1rem !important;
+                    }
+                    .catalog-item-card {
+                        padding: 0.75rem !important;
+                    }
+                    h2.form-label {
+                        font-size: 1.1rem !important;
                     }
                 }
                 /* Ensure print container doesn't show in UI but is available for html2pdf */
