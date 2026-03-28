@@ -33,6 +33,30 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
         setLabs([...labs, { name: '', indications: '' }]);
     };
 
+    const addPreSurgicalExams = () => {
+        const presurgicalLabs = [
+            'Hemograma',
+            'TP, TPT',
+            'Glicemia',
+            'BUN',
+            'Creatinina',
+            'Albúmina',
+            'Transaminasas',
+            'Proteínas totales',
+            'VIH',
+            'Urianálisis',
+            'Electrocardiograma',
+            'Prueba de embarazo'
+        ];
+        
+        const newLabs = presurgicalLabs.map(name => ({
+            name,
+            indications: ''
+        }));
+        
+        setLabs([...labs, ...newLabs]);
+    };
+
     const removeLab = (index: number) => setLabs(labs.filter((_, i) => i !== index));
 
     const updateLab = (index: number, field: string, value: string) => {
@@ -152,14 +176,24 @@ const LabRequests: React.FC<Props> = ({ patient }) => {
                                 </div>
                             )}
                         </div>
-                        <button 
-                            className="action-btn" 
-                            onClick={addCustomLab}
-                            style={{ margin: '1rem', justifyContent: 'center', borderStyle: 'dashed' }}
-                        >
-                            <Plus size={18} />
-                            Otro / Personalizado
-                        </button>
+                        <div style={{ padding: '0 1rem 1rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <button 
+                                className="action-btn" 
+                                onClick={addPreSurgicalExams}
+                                style={{ justifyContent: 'center', background: 'var(--primary-light)', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                            >
+                                <Plus size={18} />
+                                Panel Prequirúrgico
+                            </button>
+                            <button 
+                                className="action-btn" 
+                                onClick={addCustomLab}
+                                style={{ justifyContent: 'center', borderStyle: 'dashed' }}
+                            >
+                                <Plus size={18} />
+                                Otro / Personalizado
+                            </button>
+                        </div>
                     </div>
 
                     {/* Requested List */}
