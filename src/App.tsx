@@ -21,7 +21,6 @@ import SurgeryResults from './components/SurgeryResults';
 import SurgicalDescription from './components/SurgicalDescription';
 import MedicalTourism from './components/MedicalTourism';
 import Prediagnostico from './components/Prediagnostico';
-import ConfiguracionClinic from './components/ConfiguracionClinic';
 
 import { useConfig } from './context/ConfigContext';
 
@@ -89,7 +88,6 @@ function Dashboard() {
     { id: 'surgery-results', label: '📸 Resultados', icon: <ImageIcon size={20} /> },
     { id: 'sales-tools', label: 'Herramientas Vtas', icon: <FolderOpen size={20} /> },
     { id: 'prediagnostico', label: 'Prediagnóstico', icon: <FileText size={20} /> },
-    { id: 'configuracion', label: 'Config. Clínica', icon: <SettingsIcon size={20} />, requiresSettings: true },
     { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} />, requiresSettings: true },
   ].filter(item => {
     if (item.restricted) return isDrGio;
@@ -129,8 +127,6 @@ function Dashboard() {
         return <SalesTools />;
       case 'prediagnostico':
         return <Prediagnostico />;
-      case 'configuracion':
-        return (isDrGio || isSara) ? <ConfiguracionClinic /> : <Navigate to="/" replace />;
       case 'settings':
         return (isDrGio || isSara) ? <Settings /> : <Navigate to="/" replace />;
       default:

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '../context/ConfigContext';
 import { Plus, X, Save, ShieldCheck, Loader2, ToggleLeft, ToggleRight, Trash2, FileText, Upload } from 'lucide-react';
+import ConfiguracionClinic from './ConfiguracionClinic';
 import { getStoredPin, setStoredPin, getStoredDrGioPin, setStoredDrGioPin } from './PinLock';
 import { supabase } from '../lib/supabase';
 import KnowledgeBaseEditor from './KnowledgeBaseEditor';
@@ -9,6 +10,7 @@ import { DEFAULT_SURGICAL_TEMPLATES } from '../data/surgicalTemplates440';
 import { DEFAULT_RECOMMENDATIONS } from '../data/recommendations440';
 
 const Settings: React.FC = () => {
+    const [outerTab, setOuterTab] = useState<'general' | 'prediagnostico'>('general');
     const [activeTab, setActiveTab] = useState('general');
 
     const tabs = [
@@ -69,38 +71,71 @@ const Settings: React.FC = () => {
         }
     };
 
+    const outerTabs = [
+        { id: 'general' as const, label: 'General' },
+        { id: 'prediagnostico' as const, label: 'Prediagnóstico' },
+    ];
+
     return (
         <div className="tool-view no-print">
             <div className="form-section" style={{ flex: 1, border: 'none' }}>
                 <h2 className="form-label" style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1rem' }}>
                     Configuración y Catálogos
                 </h2>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                    Aquí puedes personalizar los ítems que aparecen en las listas desplegables y opciones de auto-completado.
-                </p>
 
-                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                    {tabs.map(tab => (
+                {/* Pestañas externas */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '2px solid var(--border-color)' }}>
+                    {outerTabs.map(t => (
                         <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
+                            key={t.id}
+                            onClick={() => setOuterTab(t.id)}
                             style={{
-                                padding: '0.5rem 1rem',
-                                borderRadius: '6px',
-                                border: activeTab === tab.id ? 'none' : '1px solid var(--border-color)',
-                                backgroundColor: activeTab === tab.id ? 'var(--primary)' : 'var(--bg-color)',
-                                color: activeTab === tab.id ? 'white' : 'var(--text-main)',
-                                fontWeight: 500
+                                padding: '0.5rem 1.25rem',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                fontWeight: outerTab === t.id ? 700 : 400,
+                                fontSize: '0.95rem',
+                                color: outerTab === t.id ? 'var(--primary)' : 'var(--text-muted)',
+                                borderBottom: outerTab === t.id ? '2px solid var(--primary)' : '2px solid transparent',
+                                marginBottom: '-2px',
                             }}
                         >
-                            {tab.label}
+                            {t.label}
                         </button>
                     ))}
                 </div>
 
-                <div className="settings-content">
-                    {renderContent()}
-                </div>
+                {outerTab === 'prediagnostico' ? (
+                    <ConfiguracionClinic />
+                ) : (
+                    <>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                            Aquí puedes personalizar los ítems que aparecen en las listas desplegables y opciones de auto-completado.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                            {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    style={{
+                                        padding: '0.5rem 1rem',
+                                        borderRadius: '6px',
+                                        border: activeTab === tab.id ? 'none' : '1px solid var(--border-color)',
+                                        backgroundColor: activeTab === tab.id ? 'var(--primary)' : 'var(--bg-color)',
+                                        color: activeTab === tab.id ? 'white' : 'var(--text-main)',
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="settings-content">
+                            {renderContent()}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
