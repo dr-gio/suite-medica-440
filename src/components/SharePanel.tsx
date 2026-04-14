@@ -4,7 +4,7 @@ import { useConfig } from '../context/ConfigContext';
 import { supabase } from '../lib/supabase';
 
 interface Props {
-    patient: { name: string; id: string; date: string; age: string; email?: string };
+    patient: { name: string; id: string; date: string; age: string; email?: string; ciudad?: string };
     documentTitle: string;
     onClose: () => void;
 }

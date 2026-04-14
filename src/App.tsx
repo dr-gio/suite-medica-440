@@ -66,6 +66,7 @@ function Dashboard() {
     email: 'paciente@ejemplo.com',
     date: new Date().toISOString().split('T')[0],
     age: '35',
+    ciudad: '',
   });
 
   const handlePrint = () => {
@@ -170,21 +171,26 @@ function Dashboard() {
           </div>
         </header>
         <div className="content-area">
-          <div className="document-container">
-            <div className="form-section no-print">
-              <h2 className="form-label mb-2">Datos del Paciente</h2>
-              <div className="form-row">
-                <div className="form-group" style={{ flex: 1 }}><label className="form-label">Nombre Completo</label><input className="form-input" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} /></div>
-                <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Documento / ID</label><input className="form-input" placeholder="Requerido" value={patient.id} onChange={(e) => setPatient({ ...patient, id: e.target.value })} /></div>
-                <div className="form-group" style={{ flex: 0.8 }}><label className="form-label">Email</label><input type="email" className="form-input" placeholder="Requerido para envío" value={patient.email} onChange={(e) => setPatient({ ...patient, email: e.target.value })} /></div>
+          {['prediagnostico', 'configuracion', 'settings', 'sales-tools', 'surgery-results'].includes(activeTab) ? (
+            renderContent()
+          ) : (
+            <div className="document-container">
+              <div className="form-section no-print">
+                <h2 className="form-label mb-2">Datos del Paciente</h2>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 1 }}><label className="form-label">Nombre Completo</label><input className="form-input" value={patient.name} onChange={(e) => setPatient({ ...patient, name: e.target.value })} /></div>
+                  <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Documento / ID</label><input className="form-input" placeholder="Requerido" value={patient.id} onChange={(e) => setPatient({ ...patient, id: e.target.value })} /></div>
+                  <div className="form-group" style={{ flex: 0.8 }}><label className="form-label">Email</label><input type="email" className="form-input" placeholder="Requerido para envío" value={patient.email} onChange={(e) => setPatient({ ...patient, email: e.target.value })} /></div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group" style={{ flex: 0.3 }}><label className="form-label">Edad</label><input className="form-input" value={patient.age} onChange={(e) => setPatient({ ...patient, age: e.target.value })} /></div>
+                  <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Fecha</label><input type="date" className="form-input" value={patient.date} onChange={(e) => setPatient({ ...patient, date: e.target.value })} /></div>
+                  <div className="form-group" style={{ flex: 0.8 }}><label className="form-label">País / Ciudad</label><input className="form-input" placeholder="Ej: Barranquilla, Colombia" value={patient.ciudad} onChange={(e) => setPatient({ ...patient, ciudad: e.target.value })} /></div>
+                </div>
               </div>
-              <div className="form-row">
-                <div className="form-group" style={{ flex: 0.3 }}><label className="form-label">Edad</label><input className="form-input" value={patient.age} onChange={(e) => setPatient({ ...patient, age: e.target.value })} /></div>
-                <div className="form-group" style={{ flex: 0.5 }}><label className="form-label">Fecha</label><input type="date" className="form-input" value={patient.date} onChange={(e) => setPatient({ ...patient, date: e.target.value })} /></div>
-              </div>
+              {renderContent()}
             </div>
-            {renderContent()}
-          </div>
+          )}
         </div>
       </main>
       {showShare && activeTab !== 'settings' && <SharePanel patient={patient} documentTitle={activeNavLabel || 'Documento Médico'} onClose={() => setShowShare(false)} />}

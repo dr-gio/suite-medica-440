@@ -12,6 +12,7 @@ interface Patient {
     email: string;
     date: string;
     age: string;
+    ciudad?: string;
 }
 
 interface SurgicalDescriptionProps {
