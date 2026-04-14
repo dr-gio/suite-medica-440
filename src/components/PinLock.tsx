@@ -58,16 +58,22 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
         try {
             const { supabase } = await import('../lib/supabase');
             const { data } = await supabase
-                .from('portal_usuarios')
-                .select('rol')
+                .from('usuarios_suite')
+                .select('id, nombre, foto_url, es_admin, permisos')
                 .eq('pin', pin)
                 .eq('activo', true)
                 .maybeSingle();
 
             if (data) {
                 localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
-                localStorage.setItem('isDrGio', (data.rol === 'dr_gio').toString());
-                localStorage.setItem('isSara', (pin === '0920').toString());
+                localStorage.setItem('suiteUsuarioId',     data.id);
+                localStorage.setItem('suiteUsuarioNombre', data.nombre);
+                localStorage.setItem('suiteUsuarioFoto',   data.foto_url || '');
+                localStorage.setItem('suiteEsAdmin',       String(data.es_admin));
+                localStorage.setItem('suitePermisos',      JSON.stringify(data.permisos || {}));
+                // Compatibilidad con SSO y código existente
+                localStorage.setItem('isDrGio', String(data.es_admin));
+                localStorage.setItem('isSara',  String(!data.es_admin && (data.permisos as Record<string,boolean>)?.settings === true));
                 onUnlock();
             } else {
                 setError(true);
@@ -76,12 +82,14 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
             }
         } catch {
             // Fallback a PINs locales si Supabase falla
-            const stored = getStoredPin();
             const storedDrGio = getStoredDrGioPin();
-            if (pin === stored || pin === storedDrGio) {
+            if (pin === storedDrGio) {
+                const permisosFull = '{"prescriptions":true,"labs":true,"imaging":true,"surgery":true,"nutrition":true,"consent":true,"sickleave":true,"travel":true,"referral":true,"surgical_description":true,"proposal":true,"medical_tourism":true,"surgery_results":true,"sales_tools":true,"prediagnostico":true,"settings":true}';
                 localStorage.setItem('suiteMedicaUnlockedAt', Date.now().toString());
-                localStorage.setItem('isDrGio', (pin === storedDrGio).toString());
-                localStorage.setItem('isSara', (pin === '0920').toString());
+                localStorage.setItem('suiteEsAdmin',   'true');
+                localStorage.setItem('suitePermisos',  permisosFull);
+                localStorage.setItem('isDrGio', 'true');
+                localStorage.setItem('isSara',  'false');
                 onUnlock();
             } else {
                 setError(true);
@@ -189,7 +197,7 @@ const PinLock: React.FC<PinLockProps> = ({ onUnlock }) => {
             </div>
 
             <p style={{ color: '#475569', marginTop: '2rem', fontSize: '0.8rem' }}>
-                PIN por defecto: 440440
+                Suite Médica 440
             </p>
 
             <style>{`

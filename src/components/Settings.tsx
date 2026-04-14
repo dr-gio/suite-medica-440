@@ -10,7 +10,8 @@ import { DEFAULT_SURGICAL_TEMPLATES } from '../data/surgicalTemplates440';
 import { DEFAULT_RECOMMENDATIONS } from '../data/recommendations440';
 
 const Settings: React.FC = () => {
-    const [outerTab, setOuterTab] = useState<'general' | 'prediagnostico'>('general');
+    const isAdmin = localStorage.getItem('suiteEsAdmin') === 'true' || localStorage.getItem('isDrGio') === 'true';
+    const [outerTab, setOuterTab] = useState<'general' | 'prediagnostico' | 'usuarios'>('general');
     const [activeTab, setActiveTab] = useState('general');
 
     const tabs = [
@@ -74,6 +75,7 @@ const Settings: React.FC = () => {
     const outerTabs = [
         { id: 'general' as const, label: 'General' },
         { id: 'prediagnostico' as const, label: 'Prediagnóstico' },
+        ...(isAdmin ? [{ id: 'usuarios' as const, label: '👥 Usuarios' }] : []),
     ];
 
     return (
@@ -108,6 +110,8 @@ const Settings: React.FC = () => {
 
                 {outerTab === 'prediagnostico' ? (
                     <ConfiguracionClinic />
+                ) : outerTab === 'usuarios' ? (
+                    <UsuariosConfig />
                 ) : (
                     <>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
@@ -137,6 +141,332 @@ const Settings: React.FC = () => {
                     </>
                 )}
             </div>
+        </div>
+    );
+};
+
+// ─── Gestión de Usuarios ──────────────────────────────────────────────────────
+
+interface UsuarioSuite {
+    id: string;
+    nombre: string;
+    pin: string;
+    foto_url: string | null;
+    activo: boolean;
+    es_admin: boolean;
+    permisos: Record<string, boolean>;
+}
+
+const PERMISOS_LABELS: { key: string; label: string }[] = [
+    { key: 'prescriptions', label: 'Fórmula Médica' },
+    { key: 'labs', label: 'Laboratorios' },
+    { key: 'imaging', label: 'Imágenes' },
+    { key: 'surgery', label: 'Rec. Quirúrgicas' },
+    { key: 'nutrition', label: 'Plan Nutrición' },
+    { key: 'consent', label: 'Consentimientos' },
+    { key: 'sickleave', label: 'Incapacidad' },
+    { key: 'travel', label: 'Cert. Viaje' },
+    { key: 'referral', label: 'Remisiones' },
+    { key: 'surgical_description', label: 'Descrip. Quir.' },
+    { key: 'proposal', label: 'Presupuesto' },
+    { key: 'medical_tourism', label: 'Turismo Médico' },
+    { key: 'surgery_results', label: 'Resultados' },
+    { key: 'sales_tools', label: 'Herramientas Vtas' },
+    { key: 'prediagnostico', label: 'Prediagnóstico' },
+    { key: 'settings', label: 'Configuración' },
+];
+
+const DEFAULT_PERMISOS: Record<string, boolean> = Object.fromEntries(
+    PERMISOS_LABELS.map(({ key }) => [key, false])
+);
+
+const UsuariosConfig: React.FC = () => {
+    const [usuarios, setUsuarios] = useState<UsuarioSuite[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [editingId, setEditingId] = useState<string | null>(null); // null = nuevo
+    const [showForm, setShowForm] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
+    const [uploadingFoto, setUploadingFoto] = useState(false);
+
+    const emptyForm = {
+        nombre: '',
+        pin: '',
+        foto_url: '',
+        activo: true,
+        es_admin: false,
+        permisos: { ...DEFAULT_PERMISOS },
+    };
+    const [form, setForm] = useState(emptyForm);
+
+    const showMsg = (text: string, ok: boolean) => {
+        setMsg({ text, ok });
+        setTimeout(() => setMsg(null), 4000);
+    };
+
+    const loadUsuarios = async () => {
+        const { data } = await supabase
+            .from('usuarios_suite')
+            .select('id, nombre, pin, foto_url, activo, es_admin, permisos')
+            .order('nombre');
+        setUsuarios((data as UsuarioSuite[]) || []);
+        setLoading(false);
+    };
+
+    useEffect(() => { loadUsuarios(); }, []);
+
+    const openNew = () => {
+        setEditingId(null);
+        setForm(emptyForm);
+        setShowForm(true);
+    };
+
+    const openEdit = (u: UsuarioSuite) => {
+        setEditingId(u.id);
+        setForm({
+            nombre: u.nombre,
+            pin: u.pin,
+            foto_url: u.foto_url || '',
+            activo: u.activo,
+            es_admin: u.es_admin,
+            permisos: { ...DEFAULT_PERMISOS, ...(u.permisos || {}) },
+        });
+        setShowForm(true);
+    };
+
+    const handleFotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingFoto(true);
+        const ext = file.name.split('.').pop();
+        const path = `usuarios/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('assets-440').upload(path, file, { upsert: true });
+        if (!error) {
+            const { data } = supabase.storage.from('assets-440').getPublicUrl(path);
+            setForm(f => ({ ...f, foto_url: data.publicUrl }));
+        } else {
+            showMsg('Error subiendo foto: ' + error.message, false);
+        }
+        setUploadingFoto(false);
+    };
+
+    const handleSave = async () => {
+        if (!form.nombre.trim()) { showMsg('El nombre es obligatorio.', false); return; }
+        if (!/^\d{6}$/.test(form.pin)) { showMsg('El PIN debe tener exactamente 6 dígitos numéricos.', false); return; }
+        setSaving(true);
+        const payload = {
+            nombre: form.nombre.trim(),
+            pin: form.pin,
+            foto_url: form.foto_url || null,
+            activo: form.activo,
+            es_admin: form.es_admin,
+            permisos: form.permisos,
+        };
+        let error;
+        if (editingId) {
+            ({ error } = await supabase.from('usuarios_suite').update(payload).eq('id', editingId));
+        } else {
+            ({ error } = await supabase.from('usuarios_suite').insert(payload));
+        }
+        if (error) {
+            showMsg('Error guardando: ' + error.message, false);
+        } else {
+            showMsg(editingId ? '✅ Usuario actualizado.' : '✅ Usuario creado.', true);
+            setShowForm(false);
+            loadUsuarios();
+        }
+        setSaving(false);
+    };
+
+    const handleToggleActivo = async (u: UsuarioSuite) => {
+        await supabase.from('usuarios_suite').update({ activo: !u.activo }).eq('id', u.id);
+        setUsuarios(prev => prev.map(x => x.id === u.id ? { ...x, activo: !u.activo } : x));
+    };
+
+    const initials = (nombre: string) =>
+        nombre.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('');
+
+    if (loading) return <div style={{ color: 'var(--text-muted)', padding: '1rem' }}>Cargando usuarios…</div>;
+
+    return (
+        <div style={{ maxWidth: 720 }}>
+            {msg && (
+                <div style={{
+                    padding: '0.75rem 1rem', borderRadius: 8, marginBottom: '1rem',
+                    background: msg.ok ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                    border: `1px solid ${msg.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                    color: msg.ok ? '#4ade80' : '#f87171', fontSize: 14,
+                }}>{msg.text}</div>
+            )}
+
+            {!showForm ? (
+                <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: 14, margin: 0 }}>
+                            Usuarios con acceso a la Suite Médica. Cada usuario tiene su propio PIN y permisos.
+                        </p>
+                        <button onClick={openNew} style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            background: 'var(--primary)', color: '#fff', border: 'none',
+                            padding: '0.6rem 1.25rem', borderRadius: 8, cursor: 'pointer', fontWeight: 600,
+                            whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '1rem',
+                        }}>
+                            <Plus size={16} /> Nuevo usuario
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {usuarios.map(u => (
+                            <div key={u.id} style={{
+                                display: 'flex', alignItems: 'center', gap: '1rem',
+                                padding: '0.9rem 1.1rem', borderRadius: 10,
+                                border: '1px solid var(--border-color)',
+                                background: u.activo ? 'var(--bg-color)' : 'rgba(0,0,0,0.04)',
+                                opacity: u.activo ? 1 : 0.6,
+                            }}>
+                                {/* Avatar */}
+                                {u.foto_url ? (
+                                    <img src={u.foto_url} alt={u.nombre}
+                                        style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                                ) : (
+                                    <div style={{
+                                        width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                                        background: 'var(--primary)', color: '#fff',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontWeight: 700, fontSize: 16,
+                                    }}>{initials(u.nombre)}</div>
+                                )}
+                                {/* Info */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        {u.nombre}
+                                        {u.es_admin && (
+                                            <span style={{ fontSize: 11, background: 'rgba(99,102,241,0.15)', color: '#818cf8', padding: '1px 8px', borderRadius: 20, fontWeight: 700 }}>
+                                                Admin
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                                        PIN: ••••••
+                                    </div>
+                                </div>
+                                {/* Actions */}
+                                <button onClick={() => handleToggleActivo(u)}
+                                    title={u.activo ? 'Desactivar' : 'Activar'}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: u.activo ? '#4ade80' : 'var(--text-muted)' }}>
+                                    {u.activo ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+                                </button>
+                                <button onClick={() => openEdit(u)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)' }}>
+                                    <Save size={18} />
+                                </button>
+                            </div>
+                        ))}
+                        {usuarios.length === 0 && (
+                            <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Sin usuarios registrados.</p>
+                        )}
+                    </div>
+                </>
+            ) : (
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                        <button onClick={() => setShowForm(false)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0 }}>
+                            <X size={22} />
+                        </button>
+                        <h3 style={{ margin: 0, fontWeight: 700, color: 'var(--text-main)' }}>
+                            {editingId ? 'Editar usuario' : 'Nuevo usuario'}
+                        </h3>
+                    </div>
+
+                    {/* Foto */}
+                    <div style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {form.foto_url ? (
+                            <img src={form.foto_url} alt="foto"
+                                style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : (
+                            <div style={{
+                                width: 60, height: 60, borderRadius: '50%',
+                                background: 'var(--primary)', color: '#fff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontWeight: 700, fontSize: 20,
+                            }}>{form.nombre ? initials(form.nombre) : '?'}</div>
+                        )}
+                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: 'var(--primary)', fontWeight: 600 }}>
+                            <Upload size={16} /> {uploadingFoto ? 'Subiendo…' : 'Subir foto'}
+                            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFotoUpload} disabled={uploadingFoto} />
+                        </label>
+                    </div>
+
+                    {/* Nombre y PIN */}
+                    <div className="form-row" style={{ marginBottom: '1.25rem' }}>
+                        <div className="form-group" style={{ flex: 1 }}>
+                            <label className="form-label">Nombre *</label>
+                            <input className="form-input" value={form.nombre}
+                                onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
+                        </div>
+                        <div className="form-group" style={{ flex: 0.5 }}>
+                            <label className="form-label">PIN (6 dígitos) *</label>
+                            <input className="form-input" type="password" maxLength={6} inputMode="numeric"
+                                placeholder="••••••" value={form.pin}
+                                onChange={e => setForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, '') }))} />
+                        </div>
+                    </div>
+
+                    {/* Opciones */}
+                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 500 }}>
+                            <input type="checkbox" checked={form.activo}
+                                onChange={e => setForm(f => ({ ...f, activo: e.target.checked }))} />
+                            Activo
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 500 }}>
+                            <input type="checkbox" checked={form.es_admin}
+                                onChange={e => setForm(f => ({ ...f, es_admin: e.target.checked }))} />
+                            Administrador (acceso total)
+                        </label>
+                    </div>
+
+                    {/* Permisos (solo si no es admin) */}
+                    {!form.es_admin && (
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label className="form-label" style={{ marginBottom: '0.75rem', display: 'block' }}>Permisos de módulos</label>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                {PERMISOS_LABELS.map(({ key, label }) => (
+                                    <label key={key} style={{
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                        padding: '0.35rem 0.75rem', borderRadius: 20, cursor: 'pointer',
+                                        fontSize: 13, fontWeight: 500,
+                                        border: `1px solid ${form.permisos[key] ? 'var(--primary)' : 'var(--border-color)'}`,
+                                        background: form.permisos[key] ? 'rgba(var(--primary-rgb,0,120,212),0.1)' : 'transparent',
+                                        color: form.permisos[key] ? 'var(--primary)' : 'var(--text-muted)',
+                                    }}>
+                                        <input type="checkbox" checked={!!form.permisos[key]}
+                                            onChange={e => setForm(f => ({ ...f, permisos: { ...f.permisos, [key]: e.target.checked } }))}
+                                            style={{ display: 'none' }} />
+                                        {form.permisos[key] ? '✓ ' : ''}{label}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button onClick={handleSave} disabled={saving}
+                            style={{
+                                background: 'var(--primary)', color: '#fff', border: 'none',
+                                padding: '0.65rem 1.75rem', borderRadius: 8, cursor: saving ? 'not-allowed' : 'pointer',
+                                fontWeight: 700, opacity: saving ? 0.7 : 1,
+                            }}>
+                            {saving ? 'Guardando…' : <><Save size={16} style={{ display: 'inline', marginRight: 6 }} />Guardar</>}
+                        </button>
+                        <button onClick={() => setShowForm(false)}
+                            style={{ background: 'transparent', border: '1px solid var(--border-color)', padding: '0.65rem 1.25rem', borderRadius: 8, cursor: 'pointer' }}>
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

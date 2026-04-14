@@ -1,13 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-interface Asesora {
-  id: string;
-  nombre: string;
-  foto_url: string | null;
-  activa: boolean;
-}
-
 interface ClinicConfig {
   [key: string]: string;
 }
@@ -20,7 +13,7 @@ interface Registro {
   precio_desde: number | null;
   estado: string;
   asesora_id: string | null;
-  asesoras?: { nombre: string } | null;
+  usuarios_suite?: { nombre: string } | null;
 }
 
 declare global {
@@ -37,7 +30,11 @@ const fmtFecha = (iso: string) =>
   new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 
 export default function Prediagnostico() {
-  const [asesoras, setAsesoras] = useState<Asesora[]>([]);
+  // Usuario logueado
+  const usuarioId    = localStorage.getItem('suiteUsuarioId') || '';
+  const usuarioNombre = localStorage.getItem('suiteUsuarioNombre') || 'Asesor/a';
+  const usuarioFoto  = localStorage.getItem('suiteUsuarioFoto') || '';
+
   const [config, setConfig] = useState<ClinicConfig>({});
   const [historial, setHistorial] = useState<Registro[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +49,6 @@ export default function Prediagnostico() {
     prospecto_correo: '',
     prospecto_ciudad: '',
     // Sección 2 — Comercial
-    asesora_id: '',
     procedimiento: '',
     precio_desde: '',
     observaciones: '',
@@ -62,15 +58,13 @@ export default function Prediagnostico() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('asesoras').select('*').eq('activa', true).order('nombre'),
       supabase.from('configuracion_clinic').select('clave, valor'),
       supabase
         .from('prediagnosticos')
-        .select('id, created_at, prospecto_nombre, procedimiento, precio_desde, estado, asesora_id, asesoras(nombre)')
+        .select('id, created_at, prospecto_nombre, procedimiento, precio_desde, estado, asesora_id, usuarios_suite(nombre)')
         .order('created_at', { ascending: false })
         .limit(50),
-    ]).then(([{ data: a }, { data: c }, { data: h }]) => {
-      setAsesoras(a || []);
+    ]).then(([{ data: c }, { data: h }]) => {
       const map: ClinicConfig = {};
       (c || []).forEach((r) => { map[r.clave] = r.valor || ''; });
       setConfig(map);
@@ -78,8 +72,6 @@ export default function Prediagnostico() {
       setLoading(false);
     });
   }, []);
-
-  const selectedAsesora = asesoras.find((a) => a.id === form.asesora_id) || null;
 
   const showMsg = (text: string, ok: boolean) => {
     setMsg({ text, ok });
@@ -98,7 +90,7 @@ export default function Prediagnostico() {
     const { data: record, error: dbErr } = await supabase
       .from('prediagnosticos')
       .insert({
-        asesora_id: form.asesora_id || null,
+        asesora_id: usuarioId || null,
         prospecto_nombre: form.prospecto_nombre.trim(),
         prospecto_telefono: form.prospecto_telefono.trim() || null,
         prospecto_correo: form.prospecto_correo.trim() || null,
@@ -164,8 +156,8 @@ export default function Prediagnostico() {
         procedimiento: form.procedimiento,
         precio_desde: form.precio_desde ? parseFloat(form.precio_desde) : null,
         estado: 'generado',
-        asesora_id: form.asesora_id || null,
-        asesoras: selectedAsesora ? { nombre: selectedAsesora.nombre } : null,
+        asesora_id: usuarioId || null,
+        usuarios_suite: usuarioNombre ? { nombre: usuarioNombre } : null,
       }, ...prev]);
 
       showMsg('✅ PDF generado y guardado correctamente.', true);
@@ -173,7 +165,7 @@ export default function Prediagnostico() {
       // Limpiar formulario
       setForm({
         prospecto_nombre: '', prospecto_edad: '', prospecto_telefono: '',
-        prospecto_correo: '', prospecto_ciudad: '', asesora_id: '',
+        prospecto_correo: '', prospecto_ciudad: '',
         procedimiento: '', precio_desde: '', observaciones: '',
       });
     } catch (e) {
@@ -246,32 +238,24 @@ export default function Prediagnostico() {
           2. Datos comerciales
         </h3>
 
-        {/* Selector de asesora */}
+        {/* Asesora: usuario logueado */}
         <div className="form-group" style={{ marginBottom: '1rem' }}>
           <label className="form-label">Asesora</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-            {asesoras.map((a) => (
-              <button key={a.id} type="button"
-                onClick={() => set('asesora_id', form.asesora_id === a.id ? '' : a.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
-                  border: `2px solid ${form.asesora_id === a.id ? '#A27B5A' : 'var(--border-color)'}`,
-                  background: form.asesora_id === a.id ? 'rgba(162,123,90,0.15)' : 'transparent',
-                  color: 'var(--text-primary)', fontSize: 14,
-                }}>
-                {a.foto_url && (
-                  <img src={a.foto_url} alt={a.nombre}
-                    style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} />
-                )}
-                {a.nombre}
-              </button>
-            ))}
-            {asesoras.length === 0 && (
-              <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                Sin asesoras activas. Agrégalas en Config. Clínica.
-              </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+            {usuarioFoto ? (
+              <img src={usuarioFoto} alt={usuarioNombre}
+                style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: '#A27B5A', color: '#fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 13,
+              }}>
+                {usuarioNombre.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('')}
+              </div>
             )}
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 14 }}>{usuarioNombre}</span>
           </div>
         </div>
 
@@ -343,7 +327,7 @@ export default function Prediagnostico() {
                       {r.precio_desde ? fmt(r.precio_desde) : '—'}
                     </td>
                     <td style={{ padding: '9px 10px' }}>
-                      {r.asesoras?.nombre || '—'}
+                      {r.usuarios_suite?.nombre || '—'}
                     </td>
                     <td style={{ padding: '9px 10px' }}>
                       <span style={{
@@ -364,7 +348,7 @@ export default function Prediagnostico() {
 
       {/* ── PDF Template (oculto) ── */}
       <div ref={pdfRef} style={{ display: 'none' }}>
-        <PDFTemplate form={form} asesora={selectedAsesora} config={config}
+        <PDFTemplate form={form} asesoraNombre={usuarioNombre} asesoraFoto={usuarioFoto} config={config}
           precioDesde={precioDesde} />
       </div>
     </div>
@@ -373,13 +357,14 @@ export default function Prediagnostico() {
 
 /* ─── PDF Template — 2 páginas ─────────────────────────────── */
 function PDFTemplate({
-  form, asesora, config, precioDesde,
+  form, asesoraNombre, asesoraFoto, config, precioDesde,
 }: {
   form: {
     prospecto_nombre: string; prospecto_edad: string; prospecto_ciudad: string;
     procedimiento: string; observaciones: string;
   };
-  asesora: Asesora | null;
+  asesoraNombre: string;
+  asesoraFoto: string;
   config: ClinicConfig;
   precioDesde: number | null;
 }) {
@@ -412,13 +397,13 @@ function PDFTemplate({
         {/* Strip asesora + prospecto */}
         <div style={{ background: '#F5F0E8', padding: '14px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {asesora?.foto_url && (
-              <img src={asesora.foto_url} alt={asesora.nombre}
+            {asesoraFoto && (
+              <img src={asesoraFoto} alt={asesoraNombre}
                 style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', border: '2px solid #A27B5A' }} />
             )}
             <div>
               <div style={{ fontSize: 10, color: '#A27B5A', letterSpacing: 2, textTransform: 'uppercase' }}>Asesora</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#26364D' }}>{asesora?.nombre || '—'}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#26364D' }}>{asesoraNombre || '—'}</div>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>

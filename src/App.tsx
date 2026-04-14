@@ -56,8 +56,13 @@ function Dashboard() {
   }, []);
   const [showShare, setShowShare] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isDrGio = localStorage.getItem('isDrGio') === 'true';
-  const isSara = localStorage.getItem('isSara') === 'true';
+  const isAdmin   = localStorage.getItem('suiteEsAdmin') === 'true';
+  const permisos: Record<string, boolean> = (() => {
+    try { return JSON.parse(localStorage.getItem('suitePermisos') || '{}'); } catch { return {}; }
+  })();
+  // Compatibilidad con SSO (portal sigue seteando isDrGio)
+  const isDrGio = isAdmin || localStorage.getItem('isDrGio') === 'true';
+  const isSara  = !isAdmin && localStorage.getItem('isSara') === 'true';
 
   const [patient, setPatient] = useState({
     name: 'Juan Pérez',
@@ -90,6 +95,11 @@ function Dashboard() {
     { id: 'prediagnostico', label: 'Prediagnóstico', icon: <FileText size={20} /> },
     { id: 'settings', label: 'Configuración', icon: <SettingsIcon size={20} />, requiresSettings: true },
   ].filter(item => {
+    if (isAdmin) return true; // admin ve todo
+    // Mapeo de id de navItem a clave de permisos
+    const permKey = item.id.replace(/-/g, '_') as string;
+    if (typeof permisos[permKey] === 'boolean') return permisos[permKey];
+    // Fallback a lógica anterior para items sin clave explícita
     if (item.restricted) return isDrGio;
     if (item.requiresSettings) return isDrGio || isSara;
     return true;
