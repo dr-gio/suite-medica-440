@@ -18,7 +18,6 @@ interface Registro {
   prospecto_nombre: string;
   procedimiento: string;
   precio_desde: number | null;
-  precio_hasta: number | null;
   estado: string;
   asesora_id: string | null;
   asesoras?: { nombre: string } | null;
@@ -56,7 +55,6 @@ export default function Prediagnostico() {
     asesora_id: '',
     procedimiento: '',
     precio_desde: '',
-    precio_hasta: '',
     observaciones: '',
   });
 
@@ -68,7 +66,7 @@ export default function Prediagnostico() {
       supabase.from('configuracion_clinic').select('clave, valor'),
       supabase
         .from('prediagnosticos')
-        .select('id, created_at, prospecto_nombre, procedimiento, precio_desde, precio_hasta, estado, asesora_id, asesoras(nombre)')
+        .select('id, created_at, prospecto_nombre, procedimiento, precio_desde, estado, asesora_id, asesoras(nombre)')
         .order('created_at', { ascending: false })
         .limit(50),
     ]).then(([{ data: a }, { data: c }, { data: h }]) => {
@@ -106,7 +104,6 @@ export default function Prediagnostico() {
         prospecto_correo: form.prospecto_correo.trim() || null,
         procedimiento: form.procedimiento.trim(),
         precio_desde: form.precio_desde ? parseFloat(form.precio_desde) : null,
-        precio_hasta: form.precio_hasta ? parseFloat(form.precio_hasta) : null,
         observaciones: form.observaciones.trim() || null,
         estado: 'generado',
       })
@@ -166,7 +163,6 @@ export default function Prediagnostico() {
         prospecto_nombre: form.prospecto_nombre,
         procedimiento: form.procedimiento,
         precio_desde: form.precio_desde ? parseFloat(form.precio_desde) : null,
-        precio_hasta: form.precio_hasta ? parseFloat(form.precio_hasta) : null,
         estado: 'generado',
         asesora_id: form.asesora_id || null,
         asesoras: selectedAsesora ? { nombre: selectedAsesora.nombre } : null,
@@ -178,7 +174,7 @@ export default function Prediagnostico() {
       setForm({
         prospecto_nombre: '', prospecto_edad: '', prospecto_telefono: '',
         prospecto_correo: '', prospecto_ciudad: '', asesora_id: '',
-        procedimiento: '', precio_desde: '', precio_hasta: '', observaciones: '',
+        procedimiento: '', precio_desde: '', observaciones: '',
       });
     } catch (e) {
       console.error(e);
@@ -189,7 +185,6 @@ export default function Prediagnostico() {
   }
 
   const precioDesde = form.precio_desde ? parseFloat(form.precio_desde) : null;
-  const precioHasta = form.precio_hasta ? parseFloat(form.precio_hasta) : null;
 
   const inputStyle: React.CSSProperties = { width: '100%' };
 
@@ -287,17 +282,10 @@ export default function Prediagnostico() {
             value={form.procedimiento} onChange={(e) => set('procedimiento', e.target.value)} />
         </div>
 
-        <div className="form-row">
-          <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">Precio desde (COP)</label>
-            <input type="number" className="form-input" style={inputStyle} placeholder="0"
-              value={form.precio_desde} onChange={(e) => set('precio_desde', e.target.value)} />
-          </div>
-          <div className="form-group" style={{ flex: 1 }}>
-            <label className="form-label">Precio hasta (COP)</label>
-            <input type="number" className="form-input" style={inputStyle} placeholder="0"
-              value={form.precio_hasta} onChange={(e) => set('precio_hasta', e.target.value)} />
-          </div>
+        <div className="form-group" style={{ marginBottom: '1rem' }}>
+          <label className="form-label">Precio aproximado desde (COP)</label>
+          <input type="number" className="form-input" style={inputStyle} placeholder="0"
+            value={form.precio_desde} onChange={(e) => set('precio_desde', e.target.value)} />
         </div>
 
         <div className="form-group">
@@ -377,7 +365,7 @@ export default function Prediagnostico() {
       {/* ── PDF Template (oculto) ── */}
       <div ref={pdfRef} style={{ display: 'none' }}>
         <PDFTemplate form={form} asesora={selectedAsesora} config={config}
-          precioDesde={precioDesde} precioHasta={precioHasta} />
+          precioDesde={precioDesde} />
       </div>
     </div>
   );
@@ -385,7 +373,7 @@ export default function Prediagnostico() {
 
 /* ─── PDF Template — 2 páginas ─────────────────────────────── */
 function PDFTemplate({
-  form, asesora, config, precioDesde, precioHasta,
+  form, asesora, config, precioDesde,
 }: {
   form: {
     prospecto_nombre: string; prospecto_edad: string; prospecto_ciudad: string;
@@ -394,7 +382,6 @@ function PDFTemplate({
   asesora: Asesora | null;
   config: ClinicConfig;
   precioDesde: number | null;
-  precioHasta: number | null;
 }) {
   const instagramAccounts = [config.instagram_1, config.instagram_2, config.instagram_3]
     .filter(Boolean).map((i) => `@${i}`).join(' · ');
@@ -452,15 +439,13 @@ function PDFTemplate({
             {form.procedimiento}
           </div>
 
-          {(precioDesde || precioHasta) && (
+          {precioDesde && (
             <div style={{ background: '#26364D', color: '#fff', borderRadius: 8, padding: '18px 24px', marginBottom: 24, textAlign: 'center' }}>
               <div style={{ fontSize: 11, letterSpacing: 2, color: '#A27B5A', textTransform: 'uppercase', marginBottom: 6 }}>
                 Inversión estimada
               </div>
               <div style={{ fontSize: 22, fontWeight: 700 }}>
-                {precioDesde ? `Desde ${fmt(precioDesde)}` : ''}
-                {precioDesde && precioHasta ? ' — ' : ''}
-                {precioHasta ? `Hasta ${fmt(precioHasta)} COP` : ' COP'}
+                Desde {fmt(precioDesde)} COP
               </div>
             </div>
           )}
