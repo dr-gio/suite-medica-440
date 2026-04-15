@@ -30,7 +30,7 @@ function formatCOP(value: number): string {
     return '$ ' + Math.round(value).toLocaleString('es-CO');
 }
 
-const CATEGORY_ORDER = ['Cirugías Corporales', 'Cirugías Faciales', 'Tecnologías', 'Gastos Adicionales'];
+const CATEGORY_ORDER = ['Cirugías Corporales', 'Cirugías Faciales', 'Medicina Estética', 'Metabolismo y Funcional', 'Tecnologías', 'Gastos Adicionales', 'Otros'];
 
 const EconomicProposal: React.FC<Props> = ({ patient }) => {
     const { doctorName, proposalIntro, proposalPolicies, rethus, contactPhone } = useConfig();
@@ -115,8 +115,8 @@ const EconomicProposal: React.FC<Props> = ({ patient }) => {
         setCart(prev => prev.map(i => i.id === itemId ? { ...i, unitPrice: price } : i));
     };
 
-    const surgeryItems = cart.filter(i => i.service.category.includes('Cirugías') || i.service.category === 'Tecnologías');
-    const additionalItems = cart.filter(i => i.service.category === 'Gastos Adicionales');
+    const surgeryItems = cart.filter(i => i.service.category.includes('Cirugías') || i.service.category === 'Tecnologías' || i.service.category === 'Medicina Estética' || i.service.category === 'Metabolismo y Funcional');
+    const additionalItems = cart.filter(i => i.service.category === 'Gastos Adicionales' || i.service.category === 'Otros');
 
     const subtotalSurgery = surgeryItems.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
     const discountValue = subtotalSurgery * (globalDiscount / 100);

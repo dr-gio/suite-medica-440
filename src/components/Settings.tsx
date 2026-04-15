@@ -910,7 +910,7 @@ const NutritionConfig: React.FC = () => {
 };
 
 // ─── Services Catalog Config (Supabase) ───────────────────────────────────────
-const QUOTE_CATEGORIES = ['Cirugías Corporales', 'Cirugías Faciales', 'Tecnologías', 'Gastos Adicionales'];
+const QUOTE_CATEGORIES = ['Cirugías Corporales', 'Cirugías Faciales', 'Medicina Estética', 'Metabolismo y Funcional', 'Tecnologías', 'Gastos Adicionales', 'Otros'];
 
 interface QuoteService {
     id: string;
